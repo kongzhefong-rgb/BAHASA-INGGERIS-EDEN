@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lesson 1: Back to School</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #fffaf5;
+            user-select: none;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            color: #4a4a4a;
+        }
+
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+            box-shadow: 0 6px 0 #e5e5e5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #e5e5e5;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight-text {
+            color: #f97316;
+            font-weight: 700;
+            border-bottom: 4px solid #ffedd5;
+            padding: 0 4px;
+        }
+
+        .success-pulse {
+            animation: pulse 0.5s infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.03); }
+        }
+
+        #audioUnlocker {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .color-ball {
+            box-shadow: inset -15px -15px 30px rgba(0,0,0,0.15), 0 15px 25px rgba(0,0,0,0.1);
+            border: 8px solid white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 语音激活遮罩层 -->
+    <div id="audioUnlocker">
+        <div class="text-8xl mb-6">🎒</div>
+        <h1 class="text-3xl font-bold text-orange-600 mb-2">Back to School</h1>
+        <p class="text-gray-500 mb-8">Lesson 1: Colors & More</p>
+        <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase tracking-wide">
+            Start!
+        </button>
+    </div>
+
+    <div id="app" class="max-w-md mx-auto w-full flex-grow flex flex-col shadow-2xl bg-white min-h-screen relative">
+        
+        <!-- 页眉 -->
+        <header class="p-4 flex items-center justify-between bg-orange-50 border-b-2 border-orange-100">
+            <button id="homeBtn" class="text-orange-500 font-bold p-2 hidden">🏠 Home</button>
+            <h1 class="text-xl font-bold text-orange-600 flex-grow text-center uppercase tracking-tight">Back to School</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <main id="mainContent" class="flex-grow p-6 flex flex-col">
+            
+            <!-- 主菜单 -->
+            <div id="menuView" class="w-full space-y-4 fade-in text-center">
+                <div class="py-4">
+                    <div class="text-7xl mb-2">🏫</div>
+                    <h2 class="text-3xl font-bold text-gray-800 uppercase">Lesson 1</h2>
+                </div>
+
+                <div class="grid gap-4">
+                    <button onclick="showView('intro')" class="w-full p-5 bg-yellow-50 rounded-3xl border-2 border-yellow-200 flex items-center space-x-4 btn-bounce text-left">
+                        <span class="text-4xl">👋</span>
+                        <div>
+                            <div class="font-bold text-lg text-yellow-700 uppercase">Self Intro</div>
+                            <div class="text-xs text-yellow-600">I am Eden / I am Effie</div>
+                        </div>
+                    </button>
+
+                    <button onclick="showView('quiz')" class="w-full p-5 bg-blue-50 rounded-3xl border-2 border-blue-200 flex items-center space-x-4 btn-bounce text-left">
+                        <span class="text-4xl">😊</span>
+                        <div>
+                            <div class="font-bold text-lg text-blue-700 uppercase">Feelings</div>
+                            <div class="text-xs text-blue-600">Happy or Sad?</div>
+                        </div>
+                    </button>
+
+                    <button onclick="showView('colors')" class="w-full p-5 bg-pink-50 rounded-3xl border-2 border-pink-200 flex items-center space-x-4 btn-bounce text-left">
+                        <span class="text-4xl">🌈</span>
+                        <div>
+                            <div class="font-bold text-lg text-pink-700 uppercase">Color Fun</div>
+                            <div class="text-xs text-pink-600">The Rainbow Colors</div>
+                        </div>
+                    </button>
+
+                    <button onclick="showView('memory')" class="w-full p-5 bg-green-50 rounded-3xl border-2 border-green-200 flex items-center space-x-4 btn-bounce text-left">
+                        <span class="text-4xl">🧩</span>
+                        <div>
+                            <div class="font-bold text-lg text-green-700 uppercase">Memory</div>
+                            <div class="text-xs text-green-600">Block, Slide, Sand...</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 第一关：自我介绍 -->
+            <div id="introView" class="hidden flex-grow flex flex-col">
+                <div id="introGameContent" class="fade-in flex-grow flex flex-col"></div>
+            </div>
+
+            <!-- 第二关：心情测试 -->
+            <div id="quizView" class="hidden w-full text-center fade-in">
+                <div id="quizContainer" class="space-y-6 flex flex-col items-center"></div>
+            </div>
+
+            <!-- 第三关：颜色挑战 (同步书本词汇) -->
+            <div id="colorsView" class="hidden w-full text-center fade-in">
+                <div id="colorsContainer" class="space-y-6 flex flex-col items-center"></div>
+            </div>
+
+            <!-- 第四关：记忆游戏 -->
+            <div id="memoryView" class="hidden w-full fade-in">
+                <div class="grid grid-cols-3 gap-3" id="memoryGrid"></div>
+                <button onclick="startMemoryGame()" class="mt-8 w-full py-5 bg-green-500 text-white rounded-2xl font-bold shadow-lg uppercase tracking-wide">Restart Game</button>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="feedback" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-10 py-5 rounded-3xl text-white font-bold text-3xl opacity-0 transition-opacity z-[999] pointer-events-none shadow-2xl"></div>
+
+    <script>
+        const views = ['menu', 'intro', 'quiz', 'colors', 'memory'];
+        let introState = { gender: null, step: 0 };
+        let isAudioUnlocked = false;
+
+        function unlockAudio() {
+            isAudioUnlocked = true;
+            document.getElementById('audioUnlocker').style.display = 'none';
+            speak("Welcome! Let's play.");
+        }
+
+        function speak(text, callback) {
+            if (!isAudioUnlocked) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance();
+                msg.text = text;
+                msg.lang = 'en-GB'; 
+                msg.rate = 0.7; 
+                msg.pitch = 1.1; 
+                const voices = window.speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => (v.name.includes('Female') || v.name.includes('UK English') || v.name.includes('Samantha')) && v.lang.startsWith('en'));
+                if (femaleVoice) msg.voice = femaleVoice;
+                let done = false;
+                msg.onend = () => { if(!done){ done=true; if(callback) callback(); }};
+                msg.onerror = () => { if(!done){ done=true; if(callback) callback(); }};
+                setTimeout(() => { if(!done){ done=true; if(callback) callback(); }}, 5000); 
+                window.speechSynthesis.speak(msg);
+            } else if (callback) callback();
+        }
+
+        function showView(viewName) {
+            views.forEach(v => document.getElementById(v + 'View').classList.add('hidden'));
+            document.getElementById(viewName + 'View').classList.remove('hidden');
+            document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'menu');
+            if(viewName === 'intro') startIntroGame();
+            if(viewName === 'quiz') startQuiz();
+            if(viewName === 'colors') startColorsGame();
+            if(viewName === 'memory') startMemoryGame();
+        }
+
+        document.getElementById('homeBtn').onclick = () => {
+            window.speechSynthesis.cancel();
+            showView('menu');
+        };
+
+        // --- 第一关：Intro ---
+        const introData = {
+            boy: [
+                { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Eden.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
+                { img: '5️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am five years old.", options: ['four', 'five', 'six'], correct: 'five' },
+                { img: '👦', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a boy.", options: ['boy', 'girl'], correct: 'boy' }
+            ],
+            girl: [
+                { img: '👧', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Effie.", options: ['Effie', 'Eden', 'Janice'], correct: 'Effie' },
+                { img: '3️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am three years old.", options: ['two', 'three', 'four'], correct: 'three' },
+                { img: '👧', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a girl.", options: ['boy', 'girl'], correct: 'girl' }
+            ]
+        };
+
+        function startIntroGame() {
+            introState.gender = null;
+            introState.step = 0;
+            renderIntroStep();
+        }
+
+        function renderIntroStep() {
+            const container = document.getElementById('introGameContent');
+            if (introState.gender === null) {
+                container.innerHTML = `
+                    <div class="text-center space-y-12 py-12 flex-grow flex flex-col justify-center">
+                        <h2 class="text-3xl font-bold text-gray-700 uppercase">Are you a boy or a girl?</h2>
+                        <div class="flex justify-around items-center">
+                            <button onclick="selectGender('boy')" class="flex flex-col items-center btn-bounce">
+                                <div class="text-8xl p-8 bg-blue-50 rounded-full border-4 border-blue-200">👦</div>
+                                <span class="mt-4 font-bold text-blue-600 text-2xl">Boy</span>
+                            </button>
+                            <button onclick="selectGender('girl')" class="flex flex-col items-center btn-bounce">
+                                <div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-200">👧</div>
+                                <span class="mt-4 font-bold text-pink-600 text-2xl">Girl</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                speak("Are you a boy or a girl?");
+                return;
+            }
+            const currentData = introData[introState.gender][introState.step];
+            container.innerHTML = `
+                <div class="text-center space-y-6 py-4 flex flex-col h-full animate-fade-in">
+                    <div class="flex justify-center mt-2">
+                        <div class="text-9xl p-10 bg-white rounded-full shadow-xl border-4 border-orange-50">${currentData.img}</div>
+                    </div>
+                    <div class="p-6 bg-orange-50 rounded-[30px] mx-2 border-2 border-orange-100" id="textContainer">
+                        <p id="sentenceDisplay" class="text-3xl leading-relaxed font-bold">${currentData.sentence}</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 px-4 pb-8 mt-auto">
+                        ${currentData.options.map(opt => `
+                            <button onclick="checkIntroAnswer(this, '${opt}')" class="option-btn p-5 text-2xl font-bold rounded-3xl bg-white border-2 border-gray-100 uppercase">${opt}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            speak(currentData.full);
+        }
+
+        function selectGender(g) {
+            introState.gender = g;
+            speak("I am a " + g, () => renderIntroStep());
+        }
+
+        function checkIntroAnswer(btn, selected) {
+            const currentData = introData[introState.gender][introState.step];
+            if (selected === currentData.correct) {
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => b.disabled = true);
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                document.getElementById('sentenceDisplay').innerHTML = currentData.full;
+                document.getElementById('textContainer').classList.add('success-pulse');
+                showFeedback("Great!", "bg-green-500");
+                speak(currentData.full, () => {
+                    setTimeout(() => {
+                        introState.step++;
+                        if (introState.step < 3) renderIntroStep();
+                        else showIntroFinish();
+                    }, 800);
+                });
+            } else {
+                showFeedback("Try again!", "bg-red-400");
+                speak("Try again");
+            }
+        }
+
+        function showIntroFinish() {
+            const container = document.getElementById('introGameContent');
+            container.innerHTML = `<div class="text-center py-20 flex-grow flex flex-col justify-center animate-fade-in"><div class="text-9xl">🥳</div><h2 class="text-4xl font-bold text-orange-600 uppercase">Excellent!</h2><button onclick="startIntroGame()" class="mx-auto mt-8 px-14 py-6 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-2xl btn-bounce uppercase">Play Again</button></div>`;
+            speak("Well done! You are amazing!");
+        }
+
+        // --- 第二关：Feelings ---
+        let quizIdx = 0;
+        const quizQuestions = [
+            { img: '😊', q: 'How do you feel?', options: ['Happy', 'Sad'], correct: 'Happy' },
+            { img: '😢', q: 'How do you feel?', options: ['Happy', 'Sad'], correct: 'Sad' },
+            { img: '😰', q: 'How do you feel?', options: ['Nervous', 'Happy'], correct: 'Nervous' }
+        ];
+
+        function startQuiz() {
+            quizIdx = 0;
+            renderQuizQ();
+        }
+
+        function renderQuizQ() {
+            const container = document.getElementById('quizContainer');
+            const q = quizQuestions[quizIdx];
+            container.innerHTML = `
+                <div class="w-full animate-fade-in">
+                    <div class="text-9xl mb-8 bg-yellow-50 w-44 h-44 flex items-center justify-center rounded-full mx-auto shadow-inner">${q.img}</div>
+                    <h3 class="text-3xl font-bold mb-8 text-gray-700 uppercase">How do you feel?</h3>
+                    <div class="grid grid-cols-1 gap-4 w-full px-4">
+                        ${q.options.map(opt => `<button onclick="checkQuizAnswer(this, '${opt}', '${q.correct}')" class="quiz-btn option-btn p-5 text-2xl font-bold rounded-[30px] bg-white border-2 border-blue-100 text-blue-600 uppercase">${opt}</button>`).join('')}
+                    </div>
+                </div>
+            `;
+            speak("How do you feel?");
+        }
+
+        function checkQuizAnswer(btn, selected, correct) {
+            const allBtns = document.querySelectorAll('.quiz-btn');
+            allBtns.forEach(b => b.disabled = true);
+            if (selected === correct) {
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                showFeedback("Correct!", "bg-green-500");
+                speak("I feel " + selected, () => {
+                    setTimeout(() => {
+                        quizIdx++;
+                        if (quizIdx < quizQuestions.length) renderQuizQ();
+                        else finishQuiz();
+                    }, 1000);
+                });
+            } else {
+                showFeedback("Try again!", "bg-red-400");
+                speak(selected + ". Try again", () => allBtns.forEach(b => b.disabled = false));
+            }
+        }
+
+        function finishQuiz() {
+            document.getElementById('quizContainer').innerHTML = `<div class="py-20 animate-fade-in"><div class="text-9xl mb-6">⭐</div><h3 class="text-4xl font-bold text-blue-600 uppercase">Super Star!</h3><button onclick="startQuiz()" class="mt-10 px-12 py-5 bg-blue-500 text-white rounded-full font-bold text-xl shadow-lg btn-bounce uppercase">Play Again</button></div>`;
+            speak("Super Star! Great job!");
+        }
+
+        // --- 第三关：Colors (同步书本：Red, Blue, Yellow, Green, Orange, Indigo, Violet) ---
+        let colorIdx = 0;
+        const colorQuestions = [
+            { hex: '#FF0000', name: 'Red', options: ['Red', 'Green'] },
+            { hex: '#0000FF', name: 'Blue', options: ['Indigo', 'Blue'] },
+            { hex: '#FFFF00', name: 'Yellow', options: ['Yellow', 'Violet'] },
+            { hex: '#008000', name: 'Green', options: ['Green', 'Orange'] },
+            { hex: '#FFA500', name: 'Orange', options: ['Red', 'Orange'] },
+            { hex: '#4B0082', name: 'Indigo', options: ['Indigo', 'Blue'] },
+            { hex: '#EE82EE', name: 'Violet', options: ['Violet', 'Yellow'] }
+        ];
+
+        function startColorsGame() {
+            colorIdx = 0;
+            renderColorQ();
+        }
+
+        function renderColorQ() {
+            const container = document.getElementById('colorsContainer');
+            const c = colorQuestions[colorIdx];
+            container.innerHTML = `
+                <div class="w-full animate-fade-in">
+                    <p class="text-gray-400 mb-2 font-bold uppercase text-sm">Color ${colorIdx+1}/${colorQuestions.length}</p>
+                    <div onclick="speak('${c.name}')" class="color-ball w-48 h-48 rounded-full mx-auto mb-10 cursor-pointer transition-transform hover:scale-105 active:scale-95" style="background-color: ${c.hex}"></div>
+                    <h3 class="text-3xl font-bold mb-8 text-gray-700 uppercase">What color is this?</h3>
+                    <div class="grid grid-cols-1 gap-4 w-full px-4">
+                        ${c.options.map(opt => `
+                            <button onclick="checkColorAnswer(this, '${opt}', '${c.name}')" class="color-btn option-btn p-5 text-2xl font-bold rounded-[30px] bg-white border-2 border-pink-100 text-pink-600 uppercase">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            speak("What color is this?");
+        }
+
+        function checkColorAnswer(btn, selected, correct) {
+            const allBtns = document.querySelectorAll('.color-btn');
+            allBtns.forEach(b => b.disabled = true);
+            if (selected === correct) {
+                btn.classList.add('bg-pink-500', 'text-white', 'border-pink-600');
+                showFeedback("Great!", "bg-pink-500");
+                speak("Great! It is " + selected, () => {
+                    setTimeout(() => {
+                        colorIdx++;
+                        if (colorIdx < colorQuestions.length) renderColorQ();
+                        else finishColors();
+                    }, 1000);
+                });
+            } else {
+                showFeedback("Try again!", "bg-gray-400");
+                speak("That is not " + correct + ". Try again", () => allBtns.forEach(b => b.disabled = false));
+            }
+        }
+
+        function finishColors() {
+            document.getElementById('colorsContainer').innerHTML = `<div class="py-20 animate-fade-in"><div class="text-9xl mb-6">🌈</div><h3 class="text-4xl font-bold text-pink-600 uppercase">Color Master!</h3><button onclick="startColorsGame()" class="mt-10 px-12 py-5 bg-pink-500 text-white rounded-full font-bold text-xl shadow-lg btn-bounce uppercase">Play Again</button></div>`;
+            speak("You are a color master! Excellent!");
+        }
+
+        // --- 第四关：Memory ---
+        function startMemoryGame() {
+            const grid = document.getElementById('memoryGrid');
+            const items = ['Slide', 'Blocks', 'Sand', 'Puzzle', 'Swing', 'Teacher'];
+            let cards = [...items, ...items].sort(() => Math.random() - 0.5);
+            grid.innerHTML = '';
+            cards.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'h-24 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl cursor-pointer border-b-4 border-orange-200';
+                card.innerText = '❓';
+                card.onclick = () => {
+                    const icon = item === 'Slide' ? '🛝' : item === 'Blocks' ? '🧱' : item === 'Sand' ? '⏳' : item === 'Puzzle' ? '🧩' : item === 'Swing' ? '🪑' : '👩‍🏫';
+                    card.innerText = icon;
+                    card.classList.replace('bg-orange-100', 'bg-white');
+                    speak(item);
+                };
+                grid.appendChild(card);
+            });
+            speak("Find the matching words!");
+        }
+
+        function showFeedback(text, colorClass) {
+            const fb = document.getElementById('feedback');
+            fb.innerText = text;
+            fb.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-10 py-5 rounded-full text-white font-bold text-3xl transition-all ${colorClass} opacity-100 z-[999] shadow-2xl`;
+            setTimeout(() => fb.classList.replace('opacity-100', 'opacity-0'), 1500);
+        }
+
+        showView('menu');
+    </script>
+</body>
+</html>
