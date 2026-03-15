@@ -74,16 +74,16 @@
         }
 
         .card {
-            height: 120px;
+            height: 110px;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
 
         .card.flipped { transform: rotateY(180deg); }
-        .card.matched { transform: rotateY(180deg) scale(0.95); opacity: 0.7; pointer-events: none; }
+        .card.matched { transform: rotateY(180deg) scale(0.95); opacity: 0.5; pointer-events: none; }
 
         .card-face {
             position: absolute;
@@ -128,6 +128,7 @@
         <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
     </audio>
 
+    <!-- 启动屏幕 -->
     <div id="audioUnlocker">
         <div class="text-8xl mb-6">🎒</div>
         <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase tracking-tighter">Back to School</h1>
@@ -221,7 +222,7 @@
                     </button>
                     <button onclick="showView('familyFlip')" class="w-full p-4 bg-orange-50 rounded-2xl border-2 border-orange-200 flex items-center space-x-4 btn-bounce text-left">
                         <span class="text-3xl">🃏</span>
-                        <div><div class="font-bold text-base text-orange-700 uppercase leading-none">Flip Game</div><div class="text-xs text-orange-600 italic">Match the Cards</div></div>
+                        <div><div class="font-bold text-base text-orange-700 uppercase leading-none">Flip Game</div><div class="text-xs text-orange-600 italic">Memory Matching</div></div>
                     </button>
                     <button onclick="showView('familyFun')" class="w-full p-4 bg-green-50 rounded-2xl border-2 border-green-200 flex items-center space-x-4 btn-bounce text-left">
                         <span class="text-3xl">🍲</span>
@@ -230,7 +231,7 @@
                 </div>
             </div>
 
-            <!-- 游戏区域容器 -->
+            <!-- 游戏容器 -->
             <div id="introView" class="hidden flex-grow flex flex-col"><div id="introGameContent" class="fade-in flex-grow flex flex-col"></div></div>
             <div id="greetingsView" class="hidden flex-grow flex flex-col fade-in"><div id="greetingsContainer" class="flex-grow flex flex-col space-y-4 py-2"></div></div>
             <div id="playTimeView" class="hidden flex-grow flex flex-col fade-in"><div id="playTimeContainer" class="flex-grow flex flex-col space-y-4 py-2"></div></div>
@@ -272,7 +273,7 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.15; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
-        // 核心语音控制：更新为 0.65 倍速 (极慢极清晰)
+        // 核心语音控制：固定 0.65 倍速 (极慢)
         function speak(text, callback) {
             if (!isAudioUnlocked) return;
             if ('speechSynthesis' in window) {
@@ -281,7 +282,7 @@
                 let processedText = text.replace(/\bI\b/g, 'i');
                 msg.text = processedText;
                 msg.lang = 'en-GB'; 
-                msg.rate = 0.65; // 慢语速
+                msg.rate = 0.65; 
                 msg.pitch = 1.1; 
                 const voices = window.speechSynthesis.getVoices();
                 const femaleVoice = voices.find(v => (v.name.includes('Female') || v.name.includes('UK English') || v.name.includes('Samantha')) && v.lang.startsWith('en'));
@@ -330,7 +331,7 @@
             else showView('lesson' + currentLesson);
         };
 
-        // --- Lesson 3: 家庭成员数据 (更新: 改为 my pet) ---
+        // --- Lesson 3: 数据库 ---
         const familyData = [
             { name: 'father', icon: '👨' },
             { name: 'mother', icon: '👩' },
@@ -341,14 +342,13 @@
             { name: 'my pet', icon: '🐱' }
         ];
 
+        // --- Lesson 3: 生词点击 ---
         let famIdx = 0;
         function startFamilyMembersGame() { famIdx = 0; renderFamilyStep(); }
         function renderFamilyStep() {
             const container = document.getElementById('familyMembersContainer');
             const data = familyData[famIdx];
-            const other = familyData.filter(i => i.name !== data.name);
-            const options = shuffleArray([data.name, other[Math.floor(Math.random()*other.length)].name]);
-            
+            const options = shuffleArray([data.name, familyData[(famIdx+1)%familyData.length].name]);
             container.innerHTML = `
                 <div class="text-center space-y-6 py-4 animate-fade-in flex flex-col h-full">
                     <p class="text-gray-400 font-bold uppercase text-xs">Family ${famIdx + 1}/${familyData.length}</p>
@@ -360,56 +360,41 @@
                 </div>`;
             speak(data.name);
         }
-
         function checkFamilyMember(btn, selected, correct) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.disabled = true);
             if (selected === correct) {
-                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
-                showFeedback("Correct!", "bg-green-500");
+                btn.classList.add('bg-green-500', 'text-white');
                 speak(correct, () => {
-                    setTimeout(() => {
-                        famIdx++;
-                        if (famIdx < familyData.length) renderFamilyStep();
-                        else finishFamilyMembers();
-                    }, 1200);
+                    setTimeout(() => { famIdx++; if (famIdx < familyData.length) renderFamilyStep(); else showView('lesson3'); }, 1000);
                 });
-            } else { 
-                showFeedback("Try again!", "bg-red-400"); 
-                speak("Try again", () => allBtns.forEach(b => b.disabled = false)); 
-            }
+            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        function finishFamilyMembers() {
-            document.getElementById('familyMembersContainer').innerHTML = `<div class="text-center py-20 flex-grow flex flex-col justify-center animate-fade-in"><div class="text-9xl mb-6">👨‍👩‍👧‍👦</div><h2 class="text-4xl font-bold text-pink-600 uppercase">Family Master!</h2><button onclick="startFamilyMembersGame()" class="mx-auto mt-8 px-14 py-6 bg-pink-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase">Play Again</button></div>`;
-            speak("Well done! You know your family!");
-        }
-
-        // --- Lesson 3: 翻牌游戏 (翻一番) ---
+        // --- Lesson 3: 翻一番游戏逻辑 ---
         let flipCards = [];
         let flippedIndices = [];
         let matchedCount = 0;
         let memoryPageIdx = 0;
 
-        function startFamilyFlipGame() { 
-            memoryPageIdx = 0; 
-            renderFlipPage(); 
-        }
+        function startFamilyFlipGame() { memoryPageIdx = 0; renderFlipPage(); }
 
         function renderFlipPage() {
             const container = document.getElementById('familyFlipContainer');
-            matchedCount = 0;
-            flippedIndices = [];
+            matchedCount = 0; flippedIndices = [];
             
-            // 数据分段：3对, 3对, 1对
             const itemsPerPage = 3;
             const start = memoryPageIdx * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageItems = familyData.slice(start, end);
+            let pageItems = familyData.slice(start, start + itemsPerPage);
 
-            // 准备翻牌数据：图片卡 和 文字卡
+            // 最后一页如果不足3个，随机抽选重复的字来填充
+            if (pageItems.length > 0 && pageItems.length < itemsPerPage) {
+                const needed = itemsPerPage - pageItems.length;
+                const pool = familyData.filter(item => !pageItems.includes(item));
+                const repeats = shuffleArray(pool).slice(0, needed);
+                pageItems = [...pageItems, ...repeats];
+            }
+
             const cards = [];
-            pageItems.forEach((item, idx) => {
+            pageItems.forEach((item) => {
                 cards.push({ type: 'icon', val: item.icon, name: item.name });
                 cards.push({ type: 'name', val: item.name, name: item.name });
             });
@@ -417,24 +402,22 @@
 
             container.innerHTML = `
                 <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs">Memory Game - Page ${memoryPageIdx + 1}/3</p>
-                    <h3 class="text-2xl font-bold text-orange-600 uppercase">Match the Cards!</h3>
+                    <p class="text-gray-400 font-bold uppercase text-xs">Page ${memoryPageIdx + 1}/3</p>
                     <div class="memory-grid mt-4" id="memoryGrid">
                         ${flipCards.map((card, i) => `
                             <div class="card" id="card-${i}" onclick="handleCardFlip(${i})">
                                 <div class="card-face card-front">❓</div>
                                 <div class="card-face card-back">
-                                    <div class="${card.type === 'icon' ? 'text-6xl' : 'text-xl font-bold text-orange-800 uppercase'}">${card.val}</div>
+                                    <div class="${card.type === 'icon' ? 'text-6xl' : 'text-lg font-bold text-orange-800 uppercase'}">${card.val}</div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                     <div class="mt-auto pb-6">
-                        <button onclick="startFamilyFlipGame()" class="text-orange-600 font-bold underline text-lg">Restart Game</button>
+                        <button onclick="startFamilyFlipGame()" class="text-orange-600 font-bold underline">Restart Game</button>
                     </div>
                 </div>`;
-            
-            speak("Let's play a memory game! Match the cards.");
+            speak("Match the cards!");
         }
 
         function handleCardFlip(idx) {
@@ -443,53 +426,41 @@
 
             cardEl.classList.add('flipped');
             flippedIndices.push(idx);
-            
-            const cardData = flipCards[idx];
-            speak(cardData.name);
+            speak(flipCards[idx].name);
 
             if (flippedIndices.length === 2) {
-                const [firstIdx, secondIdx] = flippedIndices;
-                const card1 = flipCards[firstIdx];
-                const card2 = flipCards[secondIdx];
-
-                if (card1.name === card2.name) {
-                    // 匹配成功
+                const [idx1, idx2] = flippedIndices;
+                if (flipCards[idx1].name === flipCards[idx2].name) {
                     setTimeout(() => {
-                        document.getElementById(`card-${firstIdx}`).classList.add('matched');
-                        document.getElementById(`card-${secondIdx}`).classList.add('matched');
+                        document.getElementById(`card-${idx1}`).classList.add('matched');
+                        document.getElementById(`card-${idx2}`).classList.add('matched');
                         showFeedback("Matched!", "bg-green-500");
                         matchedCount++;
                         flippedIndices = [];
-                        
-                        // 检查当前页面是否完成
-                        if (matchedCount === (flipCards.length / 2)) {
+                        if (matchedCount === 3) {
                             setTimeout(() => {
                                 memoryPageIdx++;
-                                if (memoryPageIdx < 3) {
-                                    renderFlipPage();
-                                } else {
-                                    finishFamilyFlip();
-                                }
-                            }, 1200);
+                                if (memoryPageIdx < 3) renderFlipPage();
+                                else finishFamilyFlip();
+                            }, 1000);
                         }
-                    }, 800);
+                    }, 600);
                 } else {
-                    // 匹配失败，翻回去
                     setTimeout(() => {
-                        document.getElementById(`card-${firstIdx}`).classList.remove('flipped');
-                        document.getElementById(`card-${secondIdx}`).classList.remove('flipped');
+                        document.getElementById(`card-${idx1}`).classList.remove('flipped');
+                        document.getElementById(`card-${idx2}`).classList.remove('flipped');
                         flippedIndices = [];
-                    }, 1200);
+                    }, 1000);
                 }
             }
         }
 
         function finishFamilyFlip() {
-            document.getElementById('familyFlipContainer').innerHTML = `<div class="text-center py-20 flex-grow flex flex-col justify-center animate-fade-in"><div class="text-9xl mb-6">🎯</div><h2 class="text-4xl font-bold text-orange-600 uppercase">You Win!</h2><button onclick="startFamilyFlipGame()" class="mx-auto mt-8 px-14 py-6 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase">Play Again</button></div>`;
-            speak("Perfect! You matched all the cards!");
+            document.getElementById('familyFlipContainer').innerHTML = `<div class="text-center py-20 animate-fade-in"><div class="text-9xl mb-6">🎯</div><h2 class="text-4xl font-bold text-orange-600 uppercase">You Won!</h2><button onclick="startFamilyFlipGame()" class="mt-10 px-14 py-6 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl uppercase">Play Again</button></div>`;
+            speak("Wonderful! You have a great memory!");
         }
 
-        // --- Lesson 3: 家庭排句子游戏 ---
+        // --- Lesson 3: 排句子 ---
         const sentenceData = [
             { photo: '👩‍🍳', words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
             { photo: '👨‍👦', words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
@@ -498,88 +469,55 @@
             { photo: '👦👶', words: ['I', 'play with my', 'baby brother.'], full: "I play with my baby brother." },
             { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
         ];
-
-        let sentIdx = 0;
-        let buildWords = [];
-
+        let sentIdx = 0; let buildWords = [];
         function startFamilyFunGame() { sentIdx = 0; renderSentStep(); }
         function renderSentStep() {
-            const data = sentenceData[sentIdx];
-            buildWords = [];
+            const data = sentenceData[sentIdx]; buildWords = [];
             const shuffled = shuffleArray([...data.words]);
-            const container = document.getElementById('familyFunContainer');
-            
-            container.innerHTML = `
+            document.getElementById('familyFunContainer').innerHTML = `
                 <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs">Step ${sentIdx + 1}/6</p>
-                    <div class="flex justify-center mt-2">
-                        <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50">${data.photo}</div>
-                    </div>
+                    <p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p>
+                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50">${data.photo}</div>
                     <div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[120px] flex flex-wrap items-center justify-center gap-3" id="sentOutput">
-                        <span class="text-gray-300 italic text-lg">Tap the words below...</span>
+                        <span class="text-gray-300 italic">Tap words...</span>
                     </div>
-                    <div class="flex flex-wrap justify-center gap-3 mt-4" id="sentWordBin">
+                    <div class="flex flex-wrap justify-center gap-3 mt-4">
                         ${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}
-                    </div>
-                    <div class="mt-auto pb-6">
-                        <button onclick="renderSentStep()" class="text-green-600 font-bold underline text-lg">Reset Sentence</button>
                     </div>
                 </div>`;
             speak(data.full);
         }
-
         function addWordToSent(btn, word) {
-            const data = sentenceData[sentIdx];
-            btn.classList.add('used');
-            buildWords.push(word);
-            
+            btn.classList.add('used'); buildWords.push(word);
             const output = document.getElementById('sentOutput');
             if (buildWords.length === 1) output.innerHTML = '';
-            output.innerHTML += `<span class="text-2xl font-bold text-green-800 fade-in px-1">${word}</span>`;
-            
+            output.innerHTML += `<span class="text-2xl font-bold text-green-800 px-1">${word}</span>`;
             speak(word);
-
-            if (buildWords.length === data.words.length) {
-                const check = buildWords.join(' ') === data.words.join(' ');
-                if (check) {
+            if (buildWords.length === sentenceData[sentIdx].words.length) {
+                if (buildWords.join(' ') === sentenceData[sentIdx].words.join(' ')) {
                     output.classList.add('success-pulse', 'bg-green-100');
-                    showFeedback("Perfect!", "bg-green-500");
-                    speak(data.full, () => {
-                        setTimeout(() => {
-                            sentIdx++;
-                            if (sentIdx < sentenceData.length) renderSentStep();
-                            else finishFamilyFun();
-                        }, 1800);
+                    speak(sentenceData[sentIdx].full, () => {
+                        setTimeout(() => { sentIdx++; if (sentIdx < 6) renderSentStep(); else finishFamilyFun(); }, 1500);
                     });
-                } else {
-                    showFeedback("Check order!", "bg-red-400");
-                    speak("Let's try that again.");
-                    setTimeout(renderSentStep, 1500);
-                }
+                } else { showFeedback("Try again!", "bg-red-400"); setTimeout(renderSentStep, 1000); }
             }
         }
-
         function finishFamilyFun() {
-            document.getElementById('familyFunContainer').innerHTML = `<div class="text-center py-20 flex-grow flex flex-col justify-center animate-fade-in"><div class="text-9xl mb-6">🏆</div><h3 class="text-4xl font-bold text-green-600 uppercase">Sentence Star!</h3><button onclick="startFamilyFunGame()" class="mt-10 px-14 py-6 bg-green-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase">Play Again</button></div>`;
-            speak("Fantastic! You can build great sentences!");
+            document.getElementById('familyFunContainer').innerHTML = `<div class="text-center py-20 animate-fade-in"><div class="text-9xl mb-6">🏆</div><h3 class="text-4xl font-bold text-green-600 uppercase">Excellent!</h3><button onclick="startFamilyFunGame()" class="mt-10 px-14 py-6 bg-green-500 text-white rounded-full font-bold text-2xl shadow-xl uppercase">Play Again</button></div>`;
+            speak("Excellent! You are a sentence star!");
         }
 
-        // --- Lesson 1, 2 逻辑省略 (保持原有稳定功能) ---
+        // --- 旧关卡逻辑保持不变 ---
         function startIntroGame() { introState.gender = null; introState.step = 0; renderIntroStep(); }
         let introState = { gender: null, step: 0 };
         function selectGender(g) { introState.gender = g; speak("I am a " + g, () => renderIntroStep()); }
         function renderIntroStep() {
-            const container = document.getElementById('introGameContent');
-            if (introState.gender === null) {
-                container.innerHTML = `<div class="text-center space-y-12 py-12 flex-grow flex flex-col justify-center animate-fade-in"><h2 class="text-3xl font-bold text-gray-700 uppercase">Are you a boy or a girl?</h2><div class="flex justify-around items-center"><button onclick="selectGender('boy')" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-blue-50 rounded-full border-4 border-blue-200">👦</div><span class="mt-4 font-bold text-blue-600 text-2xl">Boy</span></button><button onclick="selectGender('girl')" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-200">👧</div><span class="mt-4 font-bold text-pink-600 text-2xl">Girl</span></button></div></div>`;
-                speak("Are you a boy or a girl?"); return;
-            }
             const data = {
                 boy: [{ img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Eden.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' }, { img: '5️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am five years old.", options: ['four', 'five', 'six'], correct: 'five' }, { img: '👦', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a boy.", options: ['boy', 'girl'], correct: 'boy' }],
                 girl: [{ img: '👧', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Effie.", options: ['Effie', 'Eden', 'Janice'], correct: 'Effie' }, { img: '3️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am three years old.", options: ['two', 'three', 'four'], correct: 'three' }, { img: '👧', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a girl.", options: ['boy', 'girl'], correct: 'girl' }]
             };
             const current = data[introState.gender][introState.step];
-            container.innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${current.img}</div><div class="p-6 bg-orange-50 rounded-[30px] border-2 border-orange-100"><p class="text-2xl leading-relaxed font-bold">${current.sentence}</p></div><div class="grid gap-4 mt-10">${shuffleArray(current.options).map(o => `<button onclick="checkIntroAnswer(this, '${o}')" class="option-btn p-4 text-xl font-bold rounded-2xl bg-white border-2 border-gray-100 uppercase">${o}</button>`).join('')}</div></div>`;
+            document.getElementById('introGameContent').innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${current.img}</div><div class="p-6 bg-orange-50 rounded-[30px] border-2 border-orange-100"><p class="text-2xl font-bold">${current.sentence}</p></div><div class="grid gap-4 mt-10">${shuffleArray(current.options).map(o => `<button onclick="checkIntroAnswer(this, '${o}')" class="option-btn p-4 text-xl font-bold rounded-2xl bg-white border-2 border-gray-100 uppercase">${o}</button>`).join('')}</div></div>`;
             speak(current.full);
         }
         function checkIntroAnswer(btn, selected) {
@@ -589,7 +527,6 @@
                 speak(selected, () => { introState.step++; if (introState.step < 3) renderIntroStep(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
-
         function startGreetingsGame() { greetingIdx = 0; renderGreetingStep(); }
         let greetingIdx = 0;
         function renderGreetingStep() {
@@ -598,7 +535,6 @@
             document.getElementById('greetingsContainer').innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10">${step.prompt}</div><div class="flex flex-col gap-4">${shuffleArray([step.correct, "No thank you"]).map(o => `<button onclick="this.innerText.includes('${step.correct}') ? (greetingIdx++, greetingIdx < 5 ? renderGreetingStep() : showView('lesson1')) : showFeedback('Try again', 'bg-red-400')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase">${o}</button>`).join('')}</div></div>`;
             speak(step.prompt);
         }
-
         function startPlayTimeGame() { playStep = 0; renderPlayStep(); }
         let playStep = 0;
         function renderPlayStep() {
@@ -607,7 +543,6 @@
             document.getElementById('playTimeContainer').innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10">${step.full}</div><div class="flex gap-4 justify-center">${shuffleArray([step.correct, "toy"]).map(o => `<button onclick="this.innerText.includes('${step.correct}') ? (playStep++, playStep < 4 ? renderPlayStep() : showView('lesson1')) : showFeedback('Try again', 'bg-red-400')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase">${o}</button>`).join('')}</div></div>`;
             speak(step.full);
         }
-
         function startQuiz() { quizIdx = 0; renderQuizQ(); }
         let quizIdx = 0;
         function renderQuizQ() {
@@ -616,7 +551,6 @@
             document.getElementById('quizContainer').innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${q.img}</div><div class="text-3xl font-bold mb-10">How do you feel?</div><div class="flex flex-col gap-4">${shuffleArray([q.correct, "Angry"]).map(o => `<button onclick="this.innerText.includes('${q.correct}') ? (quizIdx++, quizIdx < 4 ? renderQuizQ() : showView('lesson1')) : showFeedback('Try again', 'bg-red-400')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase">${o}</button>`).join('')}</div></div>`;
             speak("How do you feel?");
         }
-
         function startColorsGame() { colorIdx = 0; renderColorQ(); }
         let colorIdx = 0;
         function renderColorQ() {
@@ -625,7 +559,6 @@
             document.getElementById('colorsContainer').innerHTML = `<div class="text-center py-10"><div class="w-48 h-48 rounded-full mx-auto mb-10" style="background:${c.hex}"></div><div class="text-3xl font-bold mb-10">What color is this?</div><div class="flex flex-col gap-4">${shuffleArray([c.name, "Black"]).map(o => `<button onclick="this.innerText.includes('${c.name}') ? (colorIdx++, colorIdx < 3 ? renderColorQ() : showView('lesson1')) : showFeedback('Try again', 'bg-red-400')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase">${o}</button>`).join('')}</div></div>`;
             speak("What color is this?");
         }
-
         function startBodyPartsGame() { bodyStep = 0; renderBodyStep(); }
         let bodyStep = 0;
         function renderBodyStep() {
@@ -634,18 +567,15 @@
             document.getElementById('bodyPartsContainer').innerHTML = `<div class="text-center py-10"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10">${step.full}</div><div class="flex gap-4 justify-center">${shuffleArray([step.correct, "leg"]).map(o => `<button onclick="this.innerText.includes('${step.correct}') ? (bodyStep++, bodyStep < 2 ? renderBodyStep() : showView('lesson2')) : showFeedback('Try again', 'bg-red-400')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase">${o}</button>`).join('')}</div></div>`;
             speak(step.full);
         }
-
         function startMyFaceGame() {
-            document.getElementById('myFaceContainer').innerHTML = `<div class="face-canvas shadow-lg"><div class="target-zone" style="top:100px;left:60px">👀</div><div class="target-zone" style="top:100px;left:165px">👀</div></div><div class="text-center mt-10"><p class="text-xl font-bold">This is a beautiful face!</p><button onclick="showView('lesson2')" class="mt-4 p-4 bg-orange-500 text-white rounded-xl">Back</button></div>`;
-            speak("This is a beautiful face!");
+            document.getElementById('myFaceContainer').innerHTML = `<div class="face-canvas shadow-lg"><div class="target-zone" style="top:100px;left:60px">👀</div><div class="target-zone" style="top:100px;left:165px">👀</div></div><div class="text-center mt-10"><p class="text-xl font-bold">Face Puzzle Done!</p><button onclick="showView('lesson2')" class="mt-4 p-4 bg-orange-500 text-white rounded-xl">Back</button></div>`;
+            speak("Great job!");
         }
-
         function showFeedback(text, colorClass) {
             const fb = document.getElementById('feedback'); fb.innerText = text;
             fb.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-10 py-5 rounded-full text-white font-bold text-3xl transition-all ${colorClass} opacity-100 z-[999] shadow-2xl`;
             setTimeout(() => fb.classList.replace('opacity-100', 'opacity-0'), 1500);
         }
-
         showView('lessonMenu');
     </script>
 </body>
