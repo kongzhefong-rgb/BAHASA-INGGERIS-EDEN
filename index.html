@@ -287,15 +287,20 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.15; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
-        // 核心语音控制：固定 0.8 倍速
+        // 核心语音控制：固定 0.75 倍速 (微调慢一点点)
         function speak(text, callback) {
             if (!isAudioUnlocked) return;
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const msg = new SpeechSynthesisUtterance();
-                msg.text = text;
+                
+                // 解决 "I" 被念成 "Capital I" 的问题
+                // 将单独的 "I" 替换成小写 "i"，语音引擎会正确发音而不会读出字母名
+                let processedText = text.replace(/\bI\b/g, 'i');
+                msg.text = processedText;
+                
                 msg.lang = 'en-GB'; 
-                msg.rate = 0.8; // 为孩子设计的清晰慢语速
+                msg.rate = 0.75; // 为孩子设计的清晰慢语速，比之前稍微再慢一点点
                 msg.pitch = 1.1; 
                 const voices = window.speechSynthesis.getVoices();
                 const femaleVoice = voices.find(v => (v.name.includes('Female') || v.name.includes('UK English') || v.name.includes('Samantha')) && v.lang.startsWith('en'));
@@ -401,7 +406,7 @@
             speak("Well done! You know your family!");
         }
 
-        // --- Lesson 3: 家庭排句子游戏 (真人人物图标) ---
+        // --- Lesson 3: 家庭排句子游戏 ---
         const sentenceData = [
             { photo: '👩‍🍳', words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
             { photo: '👨‍👦', words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
@@ -525,8 +530,6 @@
             speak("Well done!");
         }
 
-        // --- Greetings, PlayTime, Quiz, Colors, Body, Face 逻辑省略 (代码同前，确保整合) ---
-        // 为了保持整体代码可运行，这里简要补充这些游戏的入口。
         function startGreetingsGame() { greetingIdx = 0; renderGreetingStep(); }
         let greetingIdx = 0;
         function renderGreetingStep() {
