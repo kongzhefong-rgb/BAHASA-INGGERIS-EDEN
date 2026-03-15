@@ -83,7 +83,9 @@
         }
 
         .card.flipped { transform: rotateY(180deg); }
-        .card.matched { transform: rotateY(180deg) scale(0.95); opacity: 0.5; pointer-events: none; }
+        /* 匹配后的卡片保持翻开状态，并稍微改变边框颜色以示区分 */
+        .card.matched { transform: rotateY(180deg); pointer-events: none; }
+        .card.matched .card-back { border-color: #22c55e; background-color: #f0fdf4; }
 
         .card-face {
             position: absolute;
@@ -402,7 +404,7 @@
 
             container.innerHTML = `
                 <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs">Page ${memoryPageIdx + 1}/3</p>
+                    <p class="text-gray-400 font-bold uppercase text-xs font-bold">Page ${memoryPageIdx + 1}/3</p>
                     <div class="memory-grid mt-4" id="memoryGrid">
                         ${flipCards.map((card, i) => `
                             <div class="card" id="card-${i}" onclick="handleCardFlip(${i})">
@@ -422,7 +424,8 @@
 
         function handleCardFlip(idx) {
             const cardEl = document.getElementById(`card-${idx}`);
-            if (cardEl.classList.contains('flipped') || flippedIndices.length === 2) return;
+            // 如果卡片已经翻开或已匹配，或者已经选了两张，就不允许再点
+            if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return;
 
             cardEl.classList.add('flipped');
             flippedIndices.push(idx);
@@ -431,21 +434,28 @@
             if (flippedIndices.length === 2) {
                 const [idx1, idx2] = flippedIndices;
                 if (flipCards[idx1].name === flipCards[idx2].name) {
+                    // 匹配成功
                     setTimeout(() => {
                         document.getElementById(`card-${idx1}`).classList.add('matched');
                         document.getElementById(`card-${idx2}`).classList.add('matched');
-                        showFeedback("Matched!", "bg-green-500");
+                        showFeedback("Correct!", "bg-green-500");
                         matchedCount++;
                         flippedIndices = [];
+                        
+                        // 检查当前页面的 3 对是否全部找齐
                         if (matchedCount === 3) {
                             setTimeout(() => {
                                 memoryPageIdx++;
-                                if (memoryPageIdx < 3) renderFlipPage();
-                                else finishFamilyFlip();
+                                if (memoryPageIdx < 3) {
+                                    renderFlipPage();
+                                } else {
+                                    finishFamilyFlip();
+                                }
                             }, 1000);
                         }
                     }, 600);
                 } else {
+                    // 匹配失败：翻回去
                     setTimeout(() => {
                         document.getElementById(`card-${idx1}`).classList.remove('flipped');
                         document.getElementById(`card-${idx2}`).classList.remove('flipped');
