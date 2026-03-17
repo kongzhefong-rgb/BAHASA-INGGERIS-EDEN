@@ -30,7 +30,7 @@
             box-shadow: 0 2px 0 #e5e5e5;
         }
 
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -46,7 +46,7 @@
         #audioUnlocker {
             position: fixed;
             inset: 0;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.98);
             z-index: 1000;
             display: flex;
             flex-direction: column;
@@ -56,7 +56,6 @@
             padding: 20px;
         }
 
-        /* 翻牌游戏样式 */
         .memory-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -125,10 +124,10 @@
 
     <div id="audioUnlocker">
         <div class="text-8xl mb-6">🎒</div>
-        <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase tracking-tighter">Back to School</h1>
-        <p class="text-gray-500 mb-8 font-bold text-lg">Kids Learning Assistant</p>
+        <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase tracking-tighter">Learning App</h1>
+        <p class="text-gray-500 mb-8 font-bold text-lg">Lesson 1, 2 & 3</p>
         <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase tracking-wide">
-            Start Learning!
+            Start Learning
         </button>
     </div>
 
@@ -140,7 +139,6 @@
         </header>
 
         <main id="mainContent" class="flex-grow p-6 flex flex-col">
-            <!-- 课程主菜单 -->
             <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center">
                 <div class="py-2">
                     <div class="text-6xl mb-2">📚</div>
@@ -162,12 +160,9 @@
                 </div>
             </div>
 
-            <!-- 子菜单视图 (修复: 统一 ID 后缀) -->
             <div id="lesson1View" class="hidden w-full space-y-3 fade-in"></div>
             <div id="lesson2View" class="hidden w-full space-y-4 fade-in"></div>
             <div id="lesson3View" class="hidden w-full space-y-4 fade-in"></div>
-
-            <!-- 游戏区域 -->
             <div id="gameAreaView" class="hidden flex-grow flex flex-col fade-in"></div>
         </main>
     </div>
@@ -180,7 +175,7 @@
         let isAudioUnlocked = false;
         let bgmAudio = document.getElementById('bgm');
 
-        // --- 数据配置 ---
+        // --- 完整数据配置 ---
         const introData = {
             boy: [
                 { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Eden.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
@@ -194,24 +189,59 @@
             ]
         };
 
+        const greetingsData = [
+            { icon: '☀️', prompt: "Good morning!", correct: "Good morning" },
+            { icon: '🌤️', prompt: "Good afternoon!", correct: "Good afternoon" },
+            { icon: '🌙', prompt: "Good night!", correct: "Good night" },
+            { icon: '⚽', prompt: "Can I play with you?", correct: "Yes, you can" },
+            { icon: '🧸', prompt: "Do you want to play with me?", correct: "Yes, I do" }
+        ];
+
+        const playTimeData = [
+            { icon: '🧱', full: "I am playing with blocks.", correct: 'blocks' },
+            { icon: '🧩', full: "I am playing with puzzles.", correct: 'puzzles' },
+            { icon: '🛝', full: "I am playing on the slide.", correct: 'slide' },
+            { icon: '🏖️', full: "I am playing with sand.", correct: 'sand' }
+        ];
+
+        const feelingsData = [
+            { img: '😊', correct: 'Happy' }, { img: '👌', correct: 'Fine' },
+            { img: '😢', correct: 'Sad' }, { img: '😰', correct: 'Nervous' }
+        ];
+
+        const colorsData = [
+            { hex: '#FF0000', name: 'Red' }, { hex: '#0000FF', name: 'Blue' },
+            { hex: '#FFFF00', name: 'Yellow' }, { hex: '#008000', name: 'Green' },
+            { hex: '#FFA500', name: 'Orange' }, { hex: '#800080', name: 'Purple' }
+        ];
+
+        const bodyData = [
+            { icon: '💆', full: "This is my head.", correct: 'head' },
+            { icon: '💪', full: "These are my arms.", correct: 'arms' },
+            { icon: '🦵', full: "These are my legs.", correct: 'legs' },
+            { icon: '👣', full: "These are my feet.", correct: 'feet' }
+        ];
+
         const familyData = [
             { name: 'father', icon: '👨' }, { name: 'mother', icon: '👩' }, { name: 'brother', icon: '👦' },
             { name: 'sister', icon: '👧' }, { name: 'grandfather', icon: '👴' }, { name: 'grandmother', icon: '👵' },
             { name: 'my pet', icon: '🐱' }
         ];
 
-        // 状态变量
+        const sentenceDataArr = [
+            { photo: '👩‍🍳', words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
+            { photo: '👨‍👦', words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
+            { photo: '👵👴', words: ['I', 'read with', 'my grandparents.'], full: "I read with my grandparents." },
+            { photo: '👧🎨', words: ['I', 'draw with', 'my sister.'], full: "I draw with my sister." },
+            { photo: '👦👶', words: ['I', 'play with my', 'baby brother.'], full: "I play with my baby brother." },
+            { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
+        ];
+
         let introState = { gender: null, step: 0 };
-        let greetingIdx = 0;
-        let playStep = 0;
-        let quizIdx = 0;
-        let colorIdx = 0;
-        let bodyStep = 0;
-        let familyStep = 0;
+        let greetingIdx = 0, playStep = 0, quizIdx = 0, colorIdx = 0, bodyStep = 0, familyStep = 0;
         let flipCards = [], flippedIndices = [], matchedCount = 0, memoryPageIdx = 0;
         let sentIdx = 0, buildWords = [];
 
-        // --- 工具函数 ---
         function shuffleArray(array) {
             let shuffled = [...array];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -225,7 +255,7 @@
             document.getElementById('audioUnlocker').style.display = 'none';
             isAudioUnlocked = true;
             playBGM();
-            speak("Welcome! Let's learn together.");
+            speak("Welcome! Let's start.");
         }
 
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.1; bgmAudio.play().catch(e => {}); } }
@@ -239,7 +269,7 @@
                 let processedText = text.replace(/\bI\b/g, 'i');
                 msg.text = processedText;
                 msg.lang = 'en-GB'; 
-                msg.rate = 0.65; // 0.65 极慢速度
+                msg.rate = 0.45; // 进一步降低语速
                 msg.pitch = 1.1; 
                 let done = false;
                 msg.onend = () => { if(!done){ done=true; if(callback) callback(); }};
@@ -255,7 +285,6 @@
             setTimeout(() => fb.classList.replace('opacity-100', 'opacity-0'), 1500);
         }
 
-        // --- 视图切换逻辑 ---
         function goToLesson(n) {
             currentLesson = n;
             renderLessonSubmenu(n);
@@ -263,21 +292,12 @@
         }
 
         function showView(viewName) {
-            views.forEach(v => { 
-                const el = document.getElementById(v + 'View'); 
-                if(el) el.classList.add('hidden'); 
-            });
+            views.forEach(v => { const el = document.getElementById(v + 'View'); if(el) el.classList.add('hidden'); });
             const target = document.getElementById(viewName + 'View');
             if(target) target.classList.remove('hidden');
-            
             document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'lessonMenu');
-            if (viewName.includes('lesson')) { 
-                playBGM(); 
-                document.getElementById('headerTitle').innerText = "Learning"; 
-            } else { 
-                stopBGM(); 
-                document.getElementById('headerTitle').innerText = "Playing"; 
-            }
+            if (viewName.includes('lesson')) { playBGM(); document.getElementById('headerTitle').innerText = "Learning"; }
+            else { stopBGM(); document.getElementById('headerTitle').innerText = "Playing"; }
         }
 
         document.getElementById('homeBtn').onclick = () => {
@@ -290,49 +310,45 @@
             else showView('lesson' + currentLesson);
         };
 
-        // --- 渲染子菜单 ---
         function renderLessonSubmenu(n) {
             const view = document.getElementById('lesson' + n + 'View');
             if (!view) return;
             if (n === 1) {
                 view.innerHTML = `
                     <div class="grid gap-3 pt-4">
-                        ${renderMenuBtn('intro', '👋', 'Self Intro', 'I am...', 'yellow')}
-                        ${renderMenuBtn('greetings', '💬', 'Greetings', 'Conversation', 'purple')}
-                        ${renderMenuBtn('playTime', '🧸', 'Play Time', 'At the park', 'green')}
-                        ${renderMenuBtn('quiz', '😊', 'Feelings', 'Emotions', 'blue')}
-                        ${renderMenuBtn('colors', '🌈', 'Colors', 'Rainbow fun', 'pink')}
+                        ${renderMenuBtn('intro', '👋', 'Self Intro', 'yellow')}
+                        ${renderMenuBtn('greetings', '💬', 'Greetings', 'purple')}
+                        ${renderMenuBtn('playTime', '🧸', 'Play Time', 'green')}
+                        ${renderMenuBtn('quiz', '😊', 'Feelings', 'blue')}
+                        ${renderMenuBtn('colors', '🌈', 'Colors', 'pink')}
                     </div>`;
             } else if (n === 2) {
                 view.innerHTML = `
                     <div class="grid gap-4 pt-4">
-                        ${renderMenuBtn('bodyParts', '💪', 'My Body', 'Head to toes', 'blue')}
-                        ${renderMenuBtn('myFace', '👦', 'My Face', 'Puzzle game', 'orange')}
+                        ${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}
+                        ${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}
                     </div>`;
             } else if (n === 3) {
                 view.innerHTML = `
                     <div class="grid gap-3 pt-4">
-                        ${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'Family members', 'pink')}
-                        ${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'Memory challenge', 'orange')}
-                        ${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'Sentence fun', 'green')}
+                        ${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'pink')}
+                        ${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'orange')}
+                        ${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'green')}
                     </div>`;
             }
         }
 
-        function renderMenuBtn(game, emoji, title, sub, color) {
-            // 注意: Tailwind CDN 不支持完全动态生成的 bg-${color}-50，建议直接使用 inline style 或确保类名被包含
-            return `<button onclick="startGame('${game}')" class="w-full p-4 bg-white border-2 border-gray-100 rounded-2xl flex items-center space-x-4 btn-bounce text-left shadow-sm">
-                <span class="text-3xl">${emoji}</span>
-                <div><div class="font-bold text-base text-gray-700 uppercase">${title}</div><div class="text-xs text-gray-400 italic">${sub}</div></div>
+        function renderMenuBtn(game, emoji, title, color) {
+            return `<button onclick="startGame('${game}')" class="w-full p-6 bg-white border-2 border-gray-100 rounded-2xl flex items-center space-x-4 btn-bounce text-left shadow-sm">
+                <span class="text-4xl">${emoji}</span>
+                <div class="font-bold text-xl text-gray-700 uppercase">${title}</div>
             </button>`;
         }
 
-        // --- 游戏启动中心 ---
         function startGame(game) {
             showView('gameArea');
             const container = document.getElementById('gameAreaView');
             container.innerHTML = ""; 
-
             if (game === 'intro') { introState = { gender: null, step: 0 }; renderIntro(); }
             else if (game === 'greetings') { greetingIdx = 0; renderGreetings(); }
             else if (game === 'playTime') { playStep = 0; renderPlayTime(); }
@@ -345,40 +361,16 @@
             else if (game === 'familyFun') { sentIdx = 0; renderSentences(); }
         }
 
-        // --- 游戏逻辑 ---
+        // --- 游戏内容渲染函数 ---
 
-        // 1. Self Intro
         function renderIntro() {
             const container = document.getElementById('gameAreaView');
             if (introState.gender === null) {
-                container.innerHTML = `
-                <div class="text-center space-y-12 py-12 flex-grow flex flex-col justify-center animate-fade-in">
-                    <h2 class="text-3xl font-bold text-gray-700 uppercase">Are you a boy or a girl?</h2>
-                    <div class="flex justify-around items-center">
-                        <button onclick="introState.gender='boy'; renderIntro();" class="flex flex-col items-center btn-bounce">
-                            <div class="text-8xl p-8 bg-blue-50 rounded-full border-4 border-blue-200">👦</div>
-                            <span class="mt-4 font-bold text-blue-600 text-2xl">Boy</span>
-                        </button>
-                        <button onclick="introState.gender='girl'; renderIntro();" class="flex flex-col items-center btn-bounce">
-                            <div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-200">👧</div>
-                            <span class="mt-4 font-bold text-pink-600 text-2xl">Girl</span>
-                        </button>
-                    </div>
-                </div>`;
+                container.innerHTML = `<div class="text-center space-y-12 py-12 flex-grow flex flex-col justify-center animate-fade-in"><h2 class="text-3xl font-bold text-gray-700 uppercase">Are you a boy or a girl?</h2><div class="flex justify-around items-center"><button onclick="introState.gender='boy'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-blue-50 rounded-full border-4 border-blue-200">👦</div><span class="mt-4 font-bold text-blue-600 text-2xl">Boy</span></button><button onclick="introState.gender='girl'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-200">👧</div><span class="mt-4 font-bold text-pink-600 text-2xl">Girl</span></button></div></div>`;
                 speak("Are you a boy or a girl?");
             } else {
                 const data = introData[introState.gender][introState.step];
-                const options = shuffleArray(data.options);
-                container.innerHTML = `
-                <div class="text-center space-y-6 py-4 flex flex-col h-full animate-fade-in">
-                    <div class="text-8xl p-8 bg-white rounded-full mx-auto border-2 border-orange-50">${data.img}</div>
-                    <div class="p-6 bg-orange-50 rounded-[30px] mx-2 border-2 border-orange-100">
-                        <p id="introSent" class="text-2xl font-bold">${data.sentence}</p>
-                    </div>
-                    <div class="grid gap-4 px-4 mt-auto">
-                        ${options.map(opt => `<button onclick="checkIntro('${opt}')" class="option-btn p-5 bg-white border-2 rounded-2xl font-bold uppercase text-xl">${opt}</button>`).join('')}
-                    </div>
-                </div>`;
+                container.innerHTML = `<div class="text-center space-y-6 py-4 flex flex-col h-full animate-fade-in"><div class="text-8xl p-8 bg-white rounded-full mx-auto border-2 border-orange-50">${data.img}</div><div class="p-6 bg-orange-50 rounded-[30px] mx-2 border-2 border-orange-100"><p id="introSent" class="text-2xl font-bold">${data.sentence}</p></div><div class="grid gap-4 px-4 mt-auto">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro('${opt}')" class="option-btn p-5 bg-white border-2 rounded-2xl font-bold uppercase text-xl">${opt}</button>`).join('')}</div></div>`;
                 speak(data.full);
             }
         }
@@ -386,324 +378,143 @@
             const data = introData[introState.gender][introState.step];
             if (opt.toLowerCase() === data.correct.toLowerCase()) {
                 document.getElementById('introSent').innerHTML = data.full;
-                speak(data.full, () => {
-                    setTimeout(() => { 
-                        introState.step++; 
-                        if (introState.step < 3) renderIntro(); 
-                        else showView('lesson1'); 
-                    }, 1000);
-                });
+                speak(data.full, () => { setTimeout(() => { introState.step++; if (introState.step < 3) renderIntro(); else showView('lesson1'); }, 1200); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 2. Greetings
         function renderGreetings() {
-            const data = [
-                { icon: '☀️', prompt: "Good morning!", correct: "Good morning" },
-                { icon: '🌤️', prompt: "Good afternoon!", correct: "Good afternoon" },
-                { icon: '🌙', prompt: "Good night!", correct: "Good night" },
-                { icon: '⚽', prompt: "Can I play with you?", correct: "Yes, you can" },
-                { icon: '🧸', prompt: "Do you want to play with me?", correct: "Yes, I do" }
-            ];
-            const step = data[greetingIdx];
-            const options = shuffleArray([step.correct, "No thank you"]);
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col h-full animate-fade-in">
-                <div class="text-9xl mb-10">${step.icon}</div>
-                <div class="text-3xl font-bold mb-10 text-purple-700 uppercase">${step.prompt}</div>
-                <div class="flex flex-col gap-4 mt-auto">
-                    ${options.map(o => `
-                        <button onclick="checkGreeting('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>
-                    `).join('')}
-                </div>
-            </div>`;
+            const step = greetingsData[greetingIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-purple-700 uppercase">${step.prompt}</div><div class="flex flex-col gap-4 mt-auto">${shuffleArray([step.correct, "No thank you"]).map(o => `<button onclick="checkGreeting('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
             speak(step.prompt);
         }
         function checkGreeting(opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 showFeedback("Great!", "bg-green-500");
-                speak(correct, () => {
-                    greetingIdx++;
-                    if (greetingIdx < 5) renderGreetings();
-                    else showView('lesson1');
-                });
+                speak(correct, () => { greetingIdx++; if (greetingIdx < 5) renderGreetings(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 3. Play Time
         function renderPlayTime() {
-            const data = [
-                { icon: '🧱', full: "I am playing with blocks.", correct: 'blocks' },
-                { icon: '🧩', full: "I am playing with puzzles.", correct: 'puzzles' },
-                { icon: '🛝', full: "I am playing on the slide.", correct: 'slide' },
-                { icon: '🏖️', full: "I am playing with sand.", correct: 'sand' }
-            ];
-            const step = data[playStep];
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col h-full animate-fade-in">
-                <div class="text-9xl mb-10">${step.icon}</div>
-                <div class="text-3xl font-bold mb-10 text-green-700 uppercase">${step.full}</div>
-                <div class="grid grid-cols-2 gap-4 mt-auto">
-                    ${shuffleArray([step.correct, "ball"]).map(o => `
-                        <button onclick="checkPlay('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>
-                    `).join('')}
-                </div>
-            </div>`;
+            const step = playTimeData[playStep];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-green-700 uppercase">${step.full}</div><div class="grid grid-cols-2 gap-4 mt-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
             speak(step.full);
         }
         function checkPlay(opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                playStep++;
-                if (playStep < 4) renderPlayTime();
-                else showView('lesson1');
+                playStep++; if (playStep < 4) renderPlayTime(); else showView('lesson1');
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 4. Feelings
         function renderQuiz() {
-            const data = [{ img: '😊', correct: 'Happy' }, { img: '👌', correct: 'Fine' }, { img: '😢', correct: 'Sad' }, { img: '😰', correct: 'Nervous' }];
-            const q = data[quizIdx];
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col items-center animate-fade-in">
-                <div class="text-9xl mb-10 bg-blue-50 w-48 h-48 flex items-center justify-center rounded-full">${q.img}</div>
-                <div class="text-3xl font-bold mb-10 text-blue-700 uppercase">How do you feel?</div>
-                <div class="flex flex-col gap-4 w-full">
-                    ${shuffleArray([q.correct, "Angry"]).map(o => `
-                        <button onclick="checkQuiz('${o}', '${q.correct}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>
-                    `).join('')}
-                </div>
-            </div>`;
+            const q = feelingsData[quizIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="text-9xl mb-10 bg-blue-50 w-48 h-48 flex items-center justify-center rounded-full">${q.img}</div><div class="text-3xl font-bold mb-10 text-blue-700 uppercase">How do you feel?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([q.correct, "Angry"]).map(o => `<button onclick="checkQuiz('${o}', '${q.correct}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
             speak("How do you feel?");
         }
         function checkQuiz(opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                quizIdx++;
-                if (quizIdx < 4) renderQuiz();
-                else showView('lesson1');
+                quizIdx++; if (quizIdx < 4) renderQuiz(); else showView('lesson1');
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 5. Colors
         function renderColors() {
-            const colors = [{ hex: '#FF0000', name: 'Red' }, { hex: '#0000FF', name: 'Blue' }, { hex: '#FFFF00', name: 'Yellow' }];
-            const c = colors[colorIdx % 3];
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col items-center animate-fade-in">
-                <div class="w-48 h-48 rounded-full mb-10 border-8 border-white shadow-lg" style="background:${c.hex}"></div>
-                <div class="text-3xl font-bold mb-10 text-pink-700 uppercase">What color is this?</div>
-                <div class="flex flex-col gap-4 w-full">
-                    ${shuffleArray([c.name, "Black"]).map(o => `
-                        <button onclick="checkColor('${o}', '${c.name}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>
-                    `).join('')}
-                </div>
-            </div>`;
+            const c = colorsData[colorIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="w-48 h-48 rounded-full mb-10 border-8 border-white shadow-lg" style="background:${c.hex}"></div><div class="text-3xl font-bold mb-10 text-pink-700 uppercase">What color is this?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([c.name, "Black"]).map(o => `<button onclick="checkColor('${o}', '${c.name}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
             speak("What color is this?");
         }
         function checkColor(opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                colorIdx++;
-                if (colorIdx < 3) renderColors();
-                else showView('lesson1');
+                colorIdx++; if (colorIdx < 6) renderColors(); else showView('lesson1');
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 6. Body Parts
         function renderBody() {
-            const data = [{ icon: '💆', full: "This is my head.", correct: 'head' }, { icon: '💪', full: "These are my arms.", correct: 'arms' }];
-            const step = data[bodyStep];
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col items-center h-full animate-fade-in">
-                <div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div>
-                <div class="text-3xl font-bold mb-10 text-blue-800 uppercase">${step.full}</div>
-                <div class="grid grid-cols-2 gap-4 mt-auto w-full">
-                    ${shuffleArray([step.correct, "leg"]).map(o => `
-                        <button onclick="checkBody('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>
-                    `).join('')}
-                </div>
-            </div>`;
+            const step = bodyData[bodyStep];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold mb-10 text-blue-800 uppercase">${step.full}</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${shuffleArray([step.correct, "eye"]).map(o => `<button onclick="checkBody('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
             speak(step.full);
         }
         function checkBody(opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                bodyStep++;
-                if (bodyStep < 2) renderBody();
-                else showView('lesson2');
+                bodyStep++; if (bodyStep < 4) renderBody(); else showView('lesson2');
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // 7. Face Puzzle
         function renderFacePuzzle() {
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="flex flex-col items-center py-10 animate-fade-in">
-                <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner flex items-center justify-center mb-10">
-                    <div class="absolute top-1/4 left-1/4 text-5xl">👀</div>
-                    <div class="absolute top-1/4 right-1/4 text-5xl">👀</div>
-                    <div class="absolute top-1/2 text-5xl">👃</div>
-                    <div class="absolute bottom-1/4 text-5xl animate-bounce">👄</div>
-                </div>
-                <p class="text-2xl font-bold text-orange-600 uppercase mb-8">Face Done!</p>
-                <button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl">Back</button>
-            </div>`;
+            document.getElementById('gameAreaView').innerHTML = `<div class="flex flex-col items-center py-10 animate-fade-in"><div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center mb-10"><div class="absolute top-1/4 left-1/4 text-5xl">👀</div><div class="absolute top-1/4 right-1/4 text-5xl">👀</div><div class="absolute top-1/2 text-5xl">👃</div><div class="absolute bottom-1/4 text-5xl animate-bounce">👄</div></div><p class="text-2xl font-bold text-orange-600 uppercase mb-8">Face Done!</p><button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase">Back</button></div>`;
             speak("This is my face. Eyes, nose and mouth.");
         }
 
-        // 8. Family Members
         function renderFamilyMembers() {
             const item = familyData[familyStep];
-            document.getElementById('gameAreaView').innerHTML = `
-            <div class="text-center py-10 flex flex-col items-center h-full animate-fade-in">
-                <div class="text-9xl mb-10 p-10 bg-pink-50 rounded-full shadow-lg">${item.icon}</div>
-                <div class="text-4xl font-bold mb-10 text-pink-700 uppercase italic">${item.name}</div>
-                <button onclick="familyStep++; if(familyStep < 7) renderFamilyMembers(); else showView('lesson3')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl mt-auto w-full shadow-sm">Next Member ➔</button>
-            </div>`;
+            const other = familyData.filter(i => i.name !== item.name);
+            const wrong = other[Math.floor(Math.random() * other.length)].name;
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Who is this? ${familyStep + 1}/7</p><div class="text-9xl mb-10 p-10 bg-pink-50 rounded-full shadow-lg border-4 border-pink-100">${item.icon}</div><div class="grid grid-cols-1 gap-4 mt-auto w-full">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember('${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-2xl uppercase shadow-md option-btn">${opt}</button>`).join('')}</div></div>`;
             speak(item.name);
         }
+        function checkFamilyMember(opt, correct) {
+            if (opt.toLowerCase() === correct.toLowerCase()) {
+                showFeedback("Correct!", "bg-green-500");
+                speak(correct, () => { familyStep++; if (familyStep < 7) renderFamilyMembers(); else showView('lesson3'); });
+            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
+        }
 
-        // 9. Flip Game
         function renderFlipGame() {
-            const container = document.getElementById('gameAreaView');
             matchedCount = 0; flippedIndices = [];
             const itemsPerPage = 3;
             const start = memoryPageIdx * itemsPerPage;
             let pageItems = familyData.slice(start, start + itemsPerPage);
-
-            // 第三页处理：若不足 3 对，随机抽选重复的
             if (pageItems.length > 0 && pageItems.length < itemsPerPage) {
-                const needed = itemsPerPage - pageItems.length;
                 const pool = familyData.filter(item => !pageItems.includes(item));
-                const repeats = shuffleArray(pool).slice(0, needed);
-                pageItems = [...pageItems, ...repeats];
+                pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)];
             }
-
             const cards = [];
-            pageItems.forEach(item => {
-                cards.push({ type: 'icon', val: item.icon, name: item.name });
-                cards.push({ type: 'name', val: item.name, name: item.name });
-            });
+            pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); });
             flipCards = shuffleArray(cards);
-
-            container.innerHTML = `
-            <div class="text-center py-2 flex flex-col h-full animate-fade-in">
-                <p class="text-gray-400 font-bold uppercase text-xs mb-4">Memory Game - Page ${memoryPageIdx + 1}/3</p>
-                <div class="memory-grid" id="memoryGrid">
-                    ${flipCards.map((card, i) => `
-                        <div class="card" id="card-${i}" onclick="handleFlip(${i})">
-                            <div class="card-face card-front">❓</div>
-                            <div class="card-face card-back">
-                                <div class="${card.type === 'icon' ? 'text-6xl' : 'text-lg font-bold text-orange-800 uppercase'}">${card.val}</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="mt-auto pb-4">
-                    <button onclick="startGame('familyFlip')" class="text-orange-400 underline font-bold">Restart Game</button>
-                </div>
-            </div>`;
-            speak("Let's play a memory game! Match the cards.");
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Page ${memoryPageIdx + 1}/3</p><div class="memory-grid" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-6xl' : 'text-lg font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div></div>`;
+            speak("Match the cards!");
         }
-
         function handleFlip(idx) {
             const cardEl = document.getElementById(`card-${idx}`);
             if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return;
-            
             cardEl.classList.add('flipped');
             flippedIndices.push(idx);
             speak(flipCards[idx].name);
-
             if (flippedIndices.length === 2) {
                 const [i1, i2] = flippedIndices;
                 if (flipCards[i1].name === flipCards[i2].name) {
                     setTimeout(() => {
                         document.getElementById(`card-${i1}`).classList.add('matched');
                         document.getElementById(`card-${i2}`).classList.add('matched');
-                        matchedCount++; 
-                        flippedIndices = [];
-                        showFeedback("Matched!", "bg-green-500");
+                        matchedCount++; flippedIndices = [];
                         if (matchedCount === 3) {
-                            setTimeout(() => {
-                                memoryPageIdx++;
-                                if (memoryPageIdx < 3) renderFlipGame();
-                                else showView('lesson3');
-                            }, 1200);
+                            setTimeout(() => { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); }, 1200);
                         }
                     }, 600);
                 } else {
-                    setTimeout(() => {
-                        document.getElementById(`card-${i1}`).classList.remove('flipped');
-                        document.getElementById(`card-${i2}`).classList.remove('flipped');
-                        flippedIndices = [];
-                    }, 1000);
+                    setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 1000);
                 }
             }
         }
 
-        // 10. Family Sentences
         function renderSentences() {
-            const sentenceDataArr = [
-                { photo: '👩‍🍳', words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
-                { photo: '👨‍👦', words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
-                { photo: '👵👴', words: ['I', 'read with', 'my grandparents.'], full: "I read with my grandparents." },
-                { photo: '👧🎨', words: ['I', 'draw with', 'my sister.'], full: "I draw with my sister." },
-                { photo: '👦👶', words: ['I', 'play with my', 'baby brother.'], full: "I play with my baby brother." },
-                { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
-            ];
-            const data = sentenceDataArr[sentIdx]; 
-            buildWords = [];
+            const data = sentenceDataArr[sentIdx]; buildWords = [];
             const shuffled = shuffleArray([...data.words]);
-            document.getElementById('gameAreaView').innerHTML = `
-                <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p>
-                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div>
-                    <div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[120px] flex flex-wrap items-center justify-center gap-3" id="sentOutput">
-                        <span class="text-gray-300 italic">Tap the words below...</span>
-                    </div>
-                    <div class="flex flex-wrap justify-center gap-3 mt-4">
-                        ${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}
-                    </div>
-                    <div class="mt-auto pb-4">
-                        <button onclick="renderSentences()" class="text-green-500 font-bold underline">Reset Sentence</button>
-                    </div>
-                </div>`;
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p><div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div><div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[120px] flex flex-wrap items-center justify-center gap-3" id="sentOutput"><span class="text-gray-300 italic">Tap words...</span></div><div class="flex flex-wrap justify-center gap-3 mt-4">${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}</div></div>`;
             speak(data.full);
         }
-
         function addWordToSent(btn, word) {
-            btn.classList.add('used'); 
-            buildWords.push(word);
+            btn.classList.add('used'); buildWords.push(word);
             const output = document.getElementById('sentOutput');
             if (buildWords.length === 1) output.innerHTML = '';
             output.innerHTML += `<span class="text-2xl font-bold text-green-800 px-1 animate-fade-in">${word}</span>`;
             speak(word);
-
-            const sentenceDataArr = [
-                { words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
-                { words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
-                { words: ['I', 'read with', 'my grandparents.'], full: "I read with my grandparents." },
-                { words: ['I', 'draw with', 'my sister.'], full: "I draw with my sister." },
-                { words: ['I', 'play with my', 'baby brother.'], full: "I play with my baby brother." },
-                { words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
-            ];
-
             if (buildWords.length === sentenceDataArr[sentIdx].words.length) {
                 if (buildWords.join(' ') === sentenceDataArr[sentIdx].words.join(' ')) {
                     output.classList.add('success-pulse', 'bg-green-100');
-                    showFeedback("Perfect!", "bg-green-500");
-                    speak(sentenceDataArr[sentIdx].full, () => {
-                        setTimeout(() => { 
-                            sentIdx++; 
-                            if (sentIdx < 6) renderSentences(); 
-                            else showView('lesson3'); 
-                        }, 1800);
-                    });
-                } else { 
-                    showFeedback("Check order!", "bg-red-400"); 
-                    speak("Try again");
-                    setTimeout(renderSentences, 1200); 
-                }
+                    speak(sentenceDataArr[sentIdx].full, () => { setTimeout(() => { sentIdx++; if (sentIdx < 6) renderSentences(); else showView('lesson3'); }, 1800); });
+                } else { showFeedback("Try again!", "bg-red-400"); setTimeout(renderSentences, 1200); }
             }
         }
 
-        // 初始化
         showView('lessonMenu');
     </script>
 </body>
