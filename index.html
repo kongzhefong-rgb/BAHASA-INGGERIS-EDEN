@@ -36,13 +36,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .highlight-text {
-            color: #f97316;
-            font-weight: 700;
-            border-bottom: 4px solid #ffedd5;
-            padding: 0 4px;
-        }
-
         #audioUnlocker {
             position: fixed;
             inset: 0;
@@ -69,7 +62,6 @@
             transform-style: preserve-3d;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
         }
 
         .card.flipped { transform: rotateY(180deg); }
@@ -89,31 +81,42 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        .card-front {
-            background-color: #ffedd5;
-            border: 3px solid #fdba74;
-            color: #f97316;
-            font-size: 3rem;
-        }
-
-        .card-back {
-            background-color: white;
-            border: 3px solid #fb923c;
-            transform: rotateY(180deg);
-            padding: 10px;
-            text-align: center;
-        }
+        .card-front { background-color: #ffedd5; border: 3px solid #fdba74; color: #f97316; font-size: 3rem; }
+        .card-back { background-color: white; border: 3px solid #fb923c; transform: rotateY(180deg); padding: 10px; text-align: center; }
 
         .word-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
-            padding: 12px 20px; font-weight: bold; font-size: 1.25rem;
+            padding: 18px 25px; font-weight: bold; font-size: 1.5rem;
+            min-width: 80px;
             box-shadow: 0 4px 0 #e2e8f0; cursor: pointer; transition: all 0.1s;
+            text-align: center;
         }
         .word-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2e8f0; }
         .word-chip.used { opacity: 0.2; pointer-events: none; }
         
         .success-pulse { animation: pulse 0.5s infinite alternate; }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.03); } }
+
+        /* --- My Face 精确五官定位 (已移除 Mouth) --- */
+        .face-part { 
+            position: absolute;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            opacity: 0; 
+            transform: scale(0.2); 
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .face-part.visible { opacity: 1; transform: scale(1); }
+        
+        .hair-svg { width: 110%; top: -14%; left: -5%; z-index: 25; }
+        .eyes-container { top: 30%; width: 62%; left: 19%; display: flex; justify-content: space-between; z-index: 15; }
+        .ears-container { top: 34%; width: 114%; left: -7%; display: flex; justify-content: space-between; z-index: 5; }
+        .nose-part { top: 48%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 16; }
+        .tongue-part { top: 68%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 17; } /* 舌头位置微调 */
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -125,7 +128,7 @@
     <div id="audioUnlocker">
         <div class="text-8xl mb-6">🎒</div>
         <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase tracking-tighter">Learning App</h1>
-        <p class="text-gray-500 mb-8 font-bold text-lg">Lesson 1, 2 & 3</p>
+        <p class="text-gray-500 mb-8 font-bold text-lg">Lessons 1, 2 & 3</p>
         <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase tracking-wide">
             Start Learning
         </button>
@@ -175,21 +178,21 @@
         let isAudioUnlocked = false;
         let bgmAudio = document.getElementById('bgm');
 
-        // --- 完整数据配置 ---
-        const introData = {
+        // --- 数据集 ---
+        const rawIntroData = {
             boy: [
-                { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Eden.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
-                { img: '5️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am five years old.", options: ['four', 'five', 'six'], correct: 'five' },
-                { img: '👦', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a boy.", options: ['boy', 'girl'], correct: 'boy' }
+                { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
+                { img: '5️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", options: ['four', 'five', 'six'], correct: 'five' },
+                { img: '👦', sentence: "I am a <span class='highlight-text'>____</span>.", options: ['boy', 'girl'], correct: 'boy' }
             ],
             girl: [
-                { img: '👧', sentence: "My name is <span class='highlight-text'>______</span>.", full: "My name is Effie.", options: ['Effie', 'Eden', 'Janice'], correct: 'Effie' },
-                { img: '3️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", full: "I am three years old.", options: ['two', 'three', 'four'], correct: 'three' },
-                { img: '👧', sentence: "I am a <span class='highlight-text'>____</span>.", full: "I am a girl.", options: ['boy', 'girl'], correct: 'girl' }
+                { img: '👧', sentence: "My name is <span class='highlight-text'>______</span>.", options: ['Effie', 'Eden', 'Janice'], correct: 'Effie' },
+                { img: '3️⃣', sentence: "I am <span class='highlight-text'>___</span> years old.", options: ['two', 'three', 'four'], correct: 'three' },
+                { img: '👧', sentence: "I am a <span class='highlight-text'>____</span>.", options: ['boy', 'girl'], correct: 'girl' }
             ]
         };
 
-        const greetingsData = [
+        const rawGreetingsData = [
             { icon: '☀️', prompt: "Good morning!", correct: "Good morning" },
             { icon: '🌤️', prompt: "Good afternoon!", correct: "Good afternoon" },
             { icon: '🌙', prompt: "Good night!", correct: "Good night" },
@@ -197,38 +200,44 @@
             { icon: '🧸', prompt: "Do you want to play with me?", correct: "Yes, I do" }
         ];
 
-        const playTimeData = [
-            { icon: '🧱', full: "I am playing with blocks.", correct: 'blocks' },
-            { icon: '🧩', full: "I am playing with puzzles.", correct: 'puzzles' },
-            { icon: '🛝', full: "I am playing on the slide.", correct: 'slide' },
-            { icon: '🏖️', full: "I am playing with sand.", correct: 'sand' }
+        const rawPlayTimeData = [
+            { icon: '🧱', display: "I am playing with _____", full: "I am playing with blocks.", correct: 'blocks' },
+            { icon: '🧩', display: "I am playing with _____", full: "I am playing with puzzles.", correct: 'puzzles' },
+            { icon: '🛝', display: "I am playing on the _____", full: "I am playing on the slide.", correct: 'slide' },
+            { icon: '🪣', display: "I am playing with _____", full: "I am playing with sand.", correct: 'sand' }
         ];
 
-        const feelingsData = [
+        const rawFeelingsData = [
             { img: '😊', correct: 'Happy' }, { img: '👌', correct: 'Fine' },
             { img: '😢', correct: 'Sad' }, { img: '😰', correct: 'Nervous' }
         ];
 
-        const colorsData = [
+        const rawColorsData = [
             { hex: '#FF0000', name: 'Red' }, { hex: '#0000FF', name: 'Blue' },
             { hex: '#FFFF00', name: 'Yellow' }, { hex: '#008000', name: 'Green' },
             { hex: '#FFA500', name: 'Orange' }, { hex: '#800080', name: 'Purple' }
         ];
 
-        const bodyData = [
-            { icon: '💆', full: "This is my head.", correct: 'head' },
-            { icon: '💪', full: "These are my arms.", correct: 'arms' },
-            { icon: '🦵', full: "These are my legs.", correct: 'legs' },
-            { icon: '👣', full: "These are my feet.", correct: 'feet' }
+        const rawBodyData = [
+            { icon: '👤', display: "This is my _____", full: "This is my head.", correct: 'head' },
+            { icon: '💪', display: "These are my _____", full: "These are my arms.", correct: 'arms' },
+            { icon: '🦵', display: "This is my _____", full: "This is my leg.", correct: 'leg' },
+            { icon: '👣', display: "These are my _____", full: "These are my feet.", correct: 'feet' },
+            { icon: '👀', display: "These are my _____", full: "These are my eyes.", correct: 'eyes' },
+            { icon: '👂', display: "These are my _____", full: "These are my ears.", correct: 'ears' },
+            { icon: '👃', display: "This is my _____", full: "This is my nose.", correct: 'nose' },
+            { icon: '👄', display: "This is my _____", full: "This is my mouth.", correct: 'mouth' },
+            { icon: '✋', display: "This is my _____", full: "This is my hand.", correct: 'hand' },
+            { icon: '🦵', display: "This is my _____", full: "This is my knee.", correct: 'knee' }
         ];
 
-        const familyData = [
+        const rawFamilyData = [
             { name: 'father', icon: '👨' }, { name: 'mother', icon: '👩' }, { name: 'brother', icon: '👦' },
             { name: 'sister', icon: '👧' }, { name: 'grandfather', icon: '👴' }, { name: 'grandmother', icon: '👵' },
             { name: 'my pet', icon: '🐱' }
         ];
 
-        const sentenceDataArr = [
+        const rawSentenceDataArr = [
             { photo: '👩‍🍳', words: ['I', 'cook with', 'my mother.'], full: "I cook with my mother." },
             { photo: '👨‍👦', words: ['I', 'play ball with', 'my father.'], full: "I play ball with my father." },
             { photo: '👵👴', words: ['I', 'read with', 'my grandparents.'], full: "I read with my grandparents." },
@@ -237,8 +246,10 @@
             { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
         ];
 
+        let activeData = [];
         let introState = { gender: null, step: 0 };
-        let greetingIdx = 0, playStep = 0, quizIdx = 0, colorIdx = 0, bodyStep = 0, familyStep = 0;
+        let greetingIdx = 0, playStep = 0, quizIdx = 0, colorIdx = 0, bodyStep = 0, familyStep = 0, faceStep = 0;
+        let currentFaceParts = [];
         let flipCards = [], flippedIndices = [], matchedCount = 0, memoryPageIdx = 0;
         let sentIdx = 0, buildWords = [];
 
@@ -256,6 +267,7 @@
             isAudioUnlocked = true;
             playBGM();
             speak("Welcome! Let's start.");
+            showView('lessonMenu');
         }
 
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.1; bgmAudio.play().catch(e => {}); } }
@@ -269,7 +281,7 @@
                 let processedText = text.replace(/\bI\b/g, 'i');
                 msg.text = processedText;
                 msg.lang = 'en-GB'; 
-                msg.rate = 0.45; // 进一步降低语速
+                msg.rate = 0.8; 
                 msg.pitch = 1.1; 
                 let done = false;
                 msg.onend = () => { if(!done){ done=true; if(callback) callback(); }};
@@ -292,9 +304,12 @@
         }
 
         function showView(viewName) {
-            views.forEach(v => { const el = document.getElementById(v + 'View'); if(el) el.classList.add('hidden'); });
+            views.forEach(v => {
+                const el = document.getElementById(v + 'View');
+                if (el) el.classList.add('hidden');
+            });
             const target = document.getElementById(viewName + 'View');
-            if(target) target.classList.remove('hidden');
+            if (target) target.classList.remove('hidden');
             document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'lessonMenu');
             if (viewName.includes('lesson')) { playBGM(); document.getElementById('headerTitle').innerText = "Learning"; }
             else { stopBGM(); document.getElementById('headerTitle').innerText = "Playing"; }
@@ -302,39 +317,18 @@
 
         document.getElementById('homeBtn').onclick = () => {
             window.speechSynthesis.cancel();
-            const activeView = views.find(v => { 
-                const el = document.getElementById(v + 'View'); 
-                return el && !el.classList.contains('hidden'); 
-            });
-            if (activeView && activeView.includes('lesson')) showView('lessonMenu');
-            else showView('lesson' + currentLesson);
+            showView('lessonMenu');
         };
 
         function renderLessonSubmenu(n) {
             const view = document.getElementById('lesson' + n + 'View');
             if (!view) return;
             if (n === 1) {
-                view.innerHTML = `
-                    <div class="grid gap-3 pt-4">
-                        ${renderMenuBtn('intro', '👋', 'Self Intro', 'yellow')}
-                        ${renderMenuBtn('greetings', '💬', 'Greetings', 'purple')}
-                        ${renderMenuBtn('playTime', '🧸', 'Play Time', 'green')}
-                        ${renderMenuBtn('quiz', '😊', 'Feelings', 'blue')}
-                        ${renderMenuBtn('colors', '🌈', 'Colors', 'pink')}
-                    </div>`;
+                view.innerHTML = `<div class="grid gap-3 pt-4">${renderMenuBtn('intro', '👋', 'Self Intro', 'yellow')}${renderMenuBtn('greetings', '💬', 'Greetings', 'purple')}${renderMenuBtn('playTime', '🧸', 'Play Time', 'green')}${renderMenuBtn('quiz', '😊', 'Feelings', 'blue')}${renderMenuBtn('colors', '🌈', 'Colors', 'pink')}</div>`;
             } else if (n === 2) {
-                view.innerHTML = `
-                    <div class="grid gap-4 pt-4">
-                        ${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}
-                        ${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}
-                    </div>`;
+                view.innerHTML = `<div class="grid gap-4 pt-4">${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}</div>`;
             } else if (n === 3) {
-                view.innerHTML = `
-                    <div class="grid gap-3 pt-4">
-                        ${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'pink')}
-                        ${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'orange')}
-                        ${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'green')}
-                    </div>`;
+                view.innerHTML = `<div class="grid gap-3 pt-4">${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'pink')}${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'orange')}${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'green')}</div>`;
             }
         }
 
@@ -349,19 +343,30 @@
             showView('gameArea');
             const container = document.getElementById('gameAreaView');
             container.innerHTML = ""; 
-            if (game === 'intro') { introState = { gender: null, step: 0 }; renderIntro(); }
-            else if (game === 'greetings') { greetingIdx = 0; renderGreetings(); }
-            else if (game === 'playTime') { playStep = 0; renderPlayTime(); }
-            else if (game === 'quiz') { quizIdx = 0; renderQuiz(); }
-            else if (game === 'colors') { colorIdx = 0; renderColors(); }
-            else if (game === 'bodyParts') { bodyStep = 0; renderBody(); }
-            else if (game === 'myFace') { renderFacePuzzle(); }
-            else if (game === 'familyMembers') { familyStep = 0; renderFamilyMembers(); }
+            if (game === 'intro') { introState = { gender: null, step: 0 }; activeData = { boy: shuffleArray(rawIntroData.boy), girl: shuffleArray(rawIntroData.girl) }; renderIntro(); }
+            else if (game === 'greetings') { greetingIdx = 0; activeData = shuffleArray(rawGreetingsData); renderGreetings(); }
+            else if (game === 'playTime') { playStep = 0; activeData = shuffleArray(rawPlayTimeData); renderPlayTime(); }
+            else if (game === 'quiz') { quizIdx = 0; activeData = shuffleArray(rawFeelingsData); renderQuiz(); }
+            else if (game === 'colors') { colorIdx = 0; activeData = shuffleArray(rawColorsData); renderColors(); }
+            else if (game === 'bodyParts') { bodyStep = 0; activeData = shuffleArray(rawBodyData); renderBody(); }
+            else if (game === 'myFace') { 
+                faceStep = 0; 
+                // 核心：移除 Mouth，仅保留 Hair, Ears, Eyes, Nose, Tongue
+                currentFaceParts = shuffleArray([
+                    { id: 'hair', name: 'HAIR', full: 'Where is the hair?', icon: '🦱' },
+                    { id: 'ears', name: 'EARS', full: 'Where are the ears?', icon: '👂' },
+                    { id: 'eyes', name: 'EYES', full: 'Where are the eyes?', icon: '👀' },
+                    { id: 'nose', name: 'NOSE', full: 'Where is the nose?', icon: '👃' },
+                    { id: 'tongue', name: 'TONGUE', full: 'Where is the tongue?', icon: '👅' }
+                ]);
+                renderFacePuzzle(); 
+            }
+            else if (game === 'familyMembers') { familyStep = 0; activeData = shuffleArray(rawFamilyData); renderFamilyMembers(); }
             else if (game === 'familyFlip') { memoryPageIdx = 0; renderFlipGame(); }
-            else if (game === 'familyFun') { sentIdx = 0; renderSentences(); }
+            else if (game === 'familyFun') { sentIdx = 0; activeData = shuffleArray(rawSentenceDataArr); renderSentences(); }
         }
 
-        // --- 游戏内容渲染函数 ---
+        // --- Logic Implementation ---
 
         function renderIntro() {
             const container = document.getElementById('gameAreaView');
@@ -369,91 +374,171 @@
                 container.innerHTML = `<div class="text-center space-y-12 py-12 flex-grow flex flex-col justify-center animate-fade-in"><h2 class="text-3xl font-bold text-gray-700 uppercase">Are you a boy or a girl?</h2><div class="flex justify-around items-center"><button onclick="introState.gender='boy'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-blue-50 rounded-full border-4 border-blue-200">👦</div><span class="mt-4 font-bold text-blue-600 text-2xl">Boy</span></button><button onclick="introState.gender='girl'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-200">👧</div><span class="mt-4 font-bold text-pink-600 text-2xl">Girl</span></button></div></div>`;
                 speak("Are you a boy or a girl?");
             } else {
-                const data = introData[introState.gender][introState.step];
-                container.innerHTML = `<div class="text-center space-y-6 py-4 flex flex-col h-full animate-fade-in"><div class="text-8xl p-8 bg-white rounded-full mx-auto border-2 border-orange-50">${data.img}</div><div class="p-6 bg-orange-50 rounded-[30px] mx-2 border-2 border-orange-100"><p id="introSent" class="text-2xl font-bold">${data.sentence}</p></div><div class="grid gap-4 px-4 mt-auto">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro('${opt}')" class="option-btn p-5 bg-white border-2 rounded-2xl font-bold uppercase text-xl">${opt}</button>`).join('')}</div></div>`;
-                speak(data.full);
+                const data = activeData[introState.gender][introState.step];
+                container.innerHTML = `<div class="text-center space-y-6 py-4 flex flex-col h-full animate-fade-in"><div class="text-8xl p-8 bg-white rounded-full mx-auto border-2 border-orange-50">${data.img}</div><div class="p-6 bg-orange-50 rounded-[30px] mx-2 border-2 border-orange-100"><p id="introSent" class="text-2xl font-bold">${data.sentence}</p></div><div class="grid gap-4 px-4 mt-auto">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro(this, '${opt}')" class="option-btn p-5 bg-white border-2 rounded-2xl font-bold uppercase text-xl">${opt}</button>`).join('')}</div></div>`;
+                speak(data.correct); 
             }
         }
-        function checkIntro(opt) {
-            const data = introData[introState.gender][introState.step];
+        function checkIntro(btn, opt) {
+            const data = activeData[introState.gender][introState.step];
             if (opt.toLowerCase() === data.correct.toLowerCase()) {
-                document.getElementById('introSent').innerHTML = data.full;
-                speak(data.full, () => { setTimeout(() => { introState.step++; if (introState.step < 3) renderIntro(); else showView('lesson1'); }, 1200); });
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(opt, () => { setTimeout(() => { introState.step++; if (introState.step < 3) renderIntro(); else showView('lesson1'); }, 1200); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
         function renderGreetings() {
-            const step = greetingsData[greetingIdx];
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-purple-700 uppercase">${step.prompt}</div><div class="flex flex-col gap-4 mt-auto">${shuffleArray([step.correct, "No thank you"]).map(o => `<button onclick="checkGreeting('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
+            const step = rawGreetingsData[greetingIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-purple-700 uppercase">${step.prompt}</div><div class="flex flex-col gap-4 mt-auto">${shuffleArray([step.correct, "No, thank you"]).map(o => `<button onclick="checkGreeting(this, '${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
             speak(step.prompt);
         }
-        function checkGreeting(opt, correct) {
+        function checkGreeting(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
                 showFeedback("Great!", "bg-green-500");
-                speak(correct, () => { greetingIdx++; if (greetingIdx < 5) renderGreetings(); else showView('lesson1'); });
+                speak(correct, () => { greetingIdx++; if (greetingIdx < rawGreetingsData.length) renderGreetings(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
         function renderPlayTime() {
-            const step = playTimeData[playStep];
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-green-700 uppercase">${step.full}</div><div class="grid grid-cols-2 gap-4 mt-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
-            speak(step.full);
+            const step = activeData[playStep];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col h-full animate-fade-in"><div class="text-9xl mb-10">${step.icon}</div><div class="text-3xl font-bold mb-10 text-green-700 uppercase">${step.display}</div><div class="grid grid-cols-2 gap-4 mt-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay(this, '${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
+            speak(step.full); 
         }
-        function checkPlay(opt, correct) {
+        function checkPlay(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                playStep++; if (playStep < 4) renderPlayTime(); else showView('lesson1');
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(correct, () => { playStep++; if (playStep < activeData.length) renderPlayTime(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
         function renderQuiz() {
-            const q = feelingsData[quizIdx];
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="text-9xl mb-10 bg-blue-50 w-48 h-48 flex items-center justify-center rounded-full">${q.img}</div><div class="text-3xl font-bold mb-10 text-blue-700 uppercase">How do you feel?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([q.correct, "Angry"]).map(o => `<button onclick="checkQuiz('${o}', '${q.correct}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
-            speak("How do you feel?");
+            const q = activeData[quizIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="text-9xl mb-10 bg-blue-50 w-48 h-48 flex items-center justify-center rounded-full">${q.img}</div><div class="text-3xl font-bold mb-10 text-blue-700 uppercase">How do you feel?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([q.correct, "Angry"]).map(o => `<button onclick="checkQuiz(this, '${o}', '${q.correct}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
+            speak("How do you feel? I feel " + q.correct);
         }
-        function checkQuiz(opt, correct) {
+        function checkQuiz(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                quizIdx++; if (quizIdx < 4) renderQuiz(); else showView('lesson1');
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(correct, () => { quizIdx++; if (quizIdx < activeData.length) renderQuiz(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
         function renderColors() {
-            const c = colorsData[colorIdx];
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="w-48 h-48 rounded-full mb-10 border-8 border-white shadow-lg" style="background:${c.hex}"></div><div class="text-3xl font-bold mb-10 text-pink-700 uppercase">What color is this?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([c.name, "Black"]).map(o => `<button onclick="checkColor('${o}', '${c.name}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
-            speak("What color is this?");
+            const c = activeData[colorIdx];
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center animate-fade-in"><div class="w-48 h-48 rounded-full mb-10 border-8 border-white shadow-lg" style="background:${c.hex}"></div><div class="text-3xl font-bold mb-10 text-pink-700 uppercase">What color is this?</div><div class="flex flex-col gap-4 w-full">${shuffleArray([c.name, "Black"]).map(o => `<button onclick="checkColor(this, '${o}', '${c.name}')" class="p-6 bg-white border-2 rounded-3xl font-bold text-2xl uppercase shadow-lg option-btn">${o}</button>`).join('')}</div></div>`;
+            speak("What color is this? It is " + c.name);
         }
-        function checkColor(opt, correct) {
+        function checkColor(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                colorIdx++; if (colorIdx < 6) renderColors(); else showView('lesson1');
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(correct, () => { colorIdx++; if (colorIdx < activeData.length) renderColors(); else showView('lesson1'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
         function renderBody() {
-            const step = bodyData[bodyStep];
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold mb-10 text-blue-800 uppercase">${step.full}</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${shuffleArray([step.correct, "eye"]).map(o => `<button onclick="checkBody('${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
-            speak(step.full);
+            const step = activeData[bodyStep];
+            const distractors = shuffleArray(["ear", "nose", "hand", "mouth", "toe", "eye", "head", "arms", "leg", "feet"].filter(i => i !== step.correct));
+            const options = shuffleArray([step.correct, distractors[0]]);
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold mb-10 text-blue-800 uppercase">${step.display}</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${options.map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
+            speak(step.full); 
         }
-        function checkBody(opt, correct) {
+        function checkBody(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
-                bodyStep++; if (bodyStep < 4) renderBody(); else showView('lesson2');
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(correct, () => { bodyStep++; if (bodyStep < activeData.length) renderBody(); else showView('lesson2'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
+        // --- 核心更新：My Face 拼图功能 (移除 Mouth，修正 Tongue 位置) ---
         function renderFacePuzzle() {
-            document.getElementById('gameAreaView').innerHTML = `<div class="flex flex-col items-center py-10 animate-fade-in"><div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center mb-10"><div class="absolute top-1/4 left-1/4 text-5xl">👀</div><div class="absolute top-1/4 right-1/4 text-5xl">👀</div><div class="absolute top-1/2 text-5xl">👃</div><div class="absolute bottom-1/4 text-5xl animate-bounce">👄</div></div><p class="text-2xl font-bold text-orange-600 uppercase mb-8">Face Done!</p><button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase">Back</button></div>`;
-            speak("This is my face. Eyes, nose and mouth.");
+            const container = document.getElementById('gameAreaView');
+            const totalSteps = currentFaceParts.length;
+
+            // 最终画面同步逻辑
+            if (faceStep >= totalSteps) {
+                container.innerHTML = `
+                <div class="flex flex-col items-center py-10 animate-fade-in">
+                    <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner mb-10">
+                        <div class="face-part visible ears-container">${renderEarsSvg()}</div>
+                        <div class="face-part visible hair-svg">${renderHairSvg()}</div>
+                        <div class="face-part visible eyes-container">${renderEyesSvg()}</div>
+                        <div class="face-part visible nose-part text-5xl">👃</div>
+                        <div class="face-part visible tongue-part text-5xl animate-pulse">👅</div>
+                    </div>
+                    <p class="text-3xl font-bold text-orange-600 uppercase mb-8 success-pulse">Face Done!</p>
+                    <button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase btn-bounce">Back</button>
+                </div>`;
+                speak("Face Done! Excellent job!");
+                return;
+            }
+
+            const current = currentFaceParts[faceStep];
+            const options = shuffleArray([current, currentFaceParts[(faceStep+1)%totalSteps], currentFaceParts[(faceStep+2)%totalSteps]]);
+
+            const getVisibility = (partId) => {
+                const idx = currentFaceParts.findIndex(p => p.id === partId);
+                return idx < faceStep ? 'visible' : '';
+            };
+
+            container.innerHTML = `
+            <div class="flex flex-col items-center py-6 h-full animate-fade-in">
+                <div class="text-center mb-4">
+                    <p class="text-gray-400 font-bold uppercase text-xs mb-1">Step ${faceStep + 1}/${totalSteps}</p>
+                    <!-- 生词实时显示 -->
+                    <p class="text-5xl font-black text-orange-600 tracking-widest animate-bounce uppercase">${current.name}</p>
+                </div>
+                
+                <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner flex items-center justify-center mb-12">
+                    <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div>
+                    <div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div>
+                    <div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div>
+                    <div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div>
+                    <div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
+                </div>
+                
+                <div class="w-full space-y-4 mt-auto pb-10">
+                    <div class="flex justify-around items-center px-4">
+                        ${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-lg btn-bounce text-6xl">${opt.icon}</button>`).join('')}
+                    </div>
+                </div>
+            </div>`;
+            speak(current.full); 
         }
 
-        function renderFamilyMembers() {
-            const item = familyData[familyStep];
-            const other = familyData.filter(i => i.name !== item.name);
-            const wrong = other[Math.floor(Math.random() * other.length)].name;
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Who is this? ${familyStep + 1}/7</p><div class="text-9xl mb-10 p-10 bg-pink-50 rounded-full shadow-lg border-4 border-pink-100">${item.icon}</div><div class="grid grid-cols-1 gap-4 mt-auto w-full">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember('${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-2xl uppercase shadow-md option-btn">${opt}</button>`).join('')}</div></div>`;
-            speak(item.name);
+        // SVG 器官渲染
+        function renderHairSvg() { 
+            return `<svg viewBox="0 0 100 50" class="w-full h-full"><path d="M5,45 Q5,5 50,5 Q95,5 95,45 L95,45 Q80,35 65,45 Q50,30 35,45 Q20,35 5,45 Z" fill="#2d241e"/></svg>`; 
         }
-        function checkFamilyMember(opt, correct) {
+        function renderEyesSvg() { 
+            return `<div class="flex w-full justify-around"><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg></div>`; 
+        }
+        function renderEarsSvg() { 
+            return `<div class="flex w-full justify-between"><svg class="w-10 h-14" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg><svg class="w-10 h-14" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg></div>`; 
+        }
+
+        function checkFacePart(btn, selectedId, correctId, name) {
+            if (selectedId === correctId) {
+                btn.classList.add('bg-green-100', 'border-green-500');
+                showFeedback("Great!", "bg-green-500");
+                speak(name.toLowerCase(), () => { faceStep++; setTimeout(renderFacePuzzle, 1000); });
+            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
+        }
+
+        // --- Lesson 3 Logic ---
+
+        function renderFamilyMembers() {
+            const item = activeData[familyStep];
+            const other = rawFamilyData.filter(i => i.name !== item.name);
+            const wrong = other[Math.floor(Math.random() * other.length)].name;
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Member ${familyStep + 1}/${activeData.length}</p><div class="text-9xl mb-10 p-10 bg-pink-50 rounded-full shadow-lg border-4 border-pink-100">${item.icon}</div><div class="grid grid-cols-1 gap-4 mt-auto w-full">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-2xl uppercase shadow-md option-btn">${opt}</button>`).join('')}</div></div>`;
+            speak("Who is this?"); 
+        }
+        function checkFamilyMember(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
                 showFeedback("Correct!", "bg-green-500");
-                speak(correct, () => { familyStep++; if (familyStep < 7) renderFamilyMembers(); else showView('lesson3'); });
+                speak(correct, () => { familyStep++; if (familyStep < activeData.length) renderFamilyMembers(); else showView('lesson3'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
@@ -461,9 +546,9 @@
             matchedCount = 0; flippedIndices = [];
             const itemsPerPage = 3;
             const start = memoryPageIdx * itemsPerPage;
-            let pageItems = familyData.slice(start, start + itemsPerPage);
+            let pageItems = rawFamilyData.slice(start, start + itemsPerPage);
             if (pageItems.length > 0 && pageItems.length < itemsPerPage) {
-                const pool = familyData.filter(item => !pageItems.includes(item));
+                const pool = rawFamilyData.filter(item => !pageItems.includes(item));
                 pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)];
             }
             const cards = [];
@@ -485,33 +570,80 @@
                         document.getElementById(`card-${i1}`).classList.add('matched');
                         document.getElementById(`card-${i2}`).classList.add('matched');
                         matchedCount++; flippedIndices = [];
-                        if (matchedCount === 3) {
-                            setTimeout(() => { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); }, 1200);
-                        }
+                        if (matchedCount === 3) { setTimeout(() => { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); }, 1200); }
                     }, 600);
-                } else {
-                    setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 1000);
-                }
+                } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 1000); }
             }
         }
 
         function renderSentences() {
-            const data = sentenceDataArr[sentIdx]; buildWords = [];
+            const data = activeData[sentIdx]; buildWords = [];
             const shuffled = shuffleArray([...data.words]);
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p><div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div><div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[120px] flex flex-wrap items-center justify-center gap-3" id="sentOutput"><span class="text-gray-300 italic">Tap words...</span></div><div class="flex flex-wrap justify-center gap-3 mt-4">${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}</div></div>`;
+            document.getElementById('gameAreaView').innerHTML = `
+                <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
+                    <p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p>
+                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div>
+                    <div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[140px] flex flex-wrap items-center justify-center gap-3" id="sentOutput">
+                        <span class="text-gray-300 italic">Tap words to build...</span>
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-3 mt-4" id="wordBank">
+                        ${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}
+                    </div>
+                </div>`;
             speak(data.full);
         }
+
         function addWordToSent(btn, word) {
-            btn.classList.add('used'); buildWords.push(word);
-            const output = document.getElementById('sentOutput');
-            if (buildWords.length === 1) output.innerHTML = '';
-            output.innerHTML += `<span class="text-2xl font-bold text-green-800 px-1 animate-fade-in">${word}</span>`;
+            btn.classList.add('used'); 
+            buildWords.push(word);
+            refreshSentenceOutput();
             speak(word);
-            if (buildWords.length === sentenceDataArr[sentIdx].words.length) {
-                if (buildWords.join(' ') === sentenceDataArr[sentIdx].words.join(' ')) {
+            checkSentenceComplete();
+        }
+
+        function removeWordFromSent(wordIdx) {
+            const wordToRemove = buildWords[wordIdx];
+            buildWords.splice(wordIdx, 1);
+            const bankButtons = document.querySelectorAll('#wordBank button');
+            for (let btn of bankButtons) {
+                if (btn.innerText === wordToRemove && btn.classList.contains('used')) {
+                    btn.classList.remove('used');
+                    break; 
+                }
+            }
+            refreshSentenceOutput();
+            speak("removed");
+        }
+
+        function refreshSentenceOutput() {
+            const output = document.getElementById('sentOutput');
+            if (buildWords.length === 0) {
+                output.innerHTML = `<span class="text-gray-300 italic">Tap words to build...</span>`;
+                return;
+            }
+            output.innerHTML = buildWords.map((w, idx) => 
+                `<button onclick="removeWordFromSent(${idx})" class="text-2xl font-bold text-green-800 px-3 py-1 bg-white rounded-xl border border-green-200 animate-fade-in shadow-sm m-1">${w}</button>`
+            ).join('');
+        }
+
+        function checkSentenceComplete() {
+            const data = activeData[sentIdx];
+            if (buildWords.length === data.words.length) {
+                if (buildWords.join(' ') === data.words.join(' ')) {
+                    const output = document.getElementById('sentOutput');
                     output.classList.add('success-pulse', 'bg-green-100');
-                    speak(sentenceDataArr[sentIdx].full, () => { setTimeout(() => { sentIdx++; if (sentIdx < 6) renderSentences(); else showView('lesson3'); }, 1800); });
-                } else { showFeedback("Try again!", "bg-red-400"); setTimeout(renderSentences, 1200); }
+                    showFeedback("Perfect!", "bg-green-500");
+                    speak(data.full, () => {
+                        setTimeout(() => { 
+                            sentIdx++; 
+                            if (sentIdx < 6) renderSentences(); 
+                            else showView('lesson3'); 
+                        }, 1800);
+                    });
+                } else { 
+                    showFeedback("Check the order!", "bg-red-400"); 
+                    speak("Try again");
+                }
             }
         }
 
