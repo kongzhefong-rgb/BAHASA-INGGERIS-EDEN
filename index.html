@@ -49,40 +49,33 @@
             padding: 20px;
         }
 
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            perspective: 1000px;
-        }
-
-        .card {
-            height: 110px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-
-        .card.flipped { transform: rotateY(180deg); }
-        .card.matched { transform: rotateY(180deg); pointer-events: none; }
-        .card.matched .card-back { border-color: #22c55e; background-color: #f0fdf4; }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
+        /* 消消乐方块样式 */
+        .match-tile {
+            height: 90px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 20px;
+            border-radius: 18px;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 0 #e2e8f0;
+            border: 2px solid #e2e8f0;
+            background: white;
+            padding: 8px;
         }
-
-        .card-front { background-color: #ffedd5; border: 3px solid #fdba74; color: #f97316; font-size: 3rem; }
-        .card-back { background-color: white; border: 3px solid #fb923c; transform: rotateY(180deg); padding: 10px; text-align: center; }
+        .match-tile.selected {
+            border-color: #fb923c;
+            background-color: #fff7ed;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 0 #fdba74;
+        }
+        .match-tile.hidden {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
 
         .word-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
@@ -91,23 +84,20 @@
             box-shadow: 0 4px 0 #e2e8f0; cursor: pointer; transition: all 0.1s;
             text-align: center;
         }
-        .word-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2e8f0; }
         .word-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
         
-        /* 字母卡片样式 */
         .letter-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 10px;
             padding: 12px; font-weight: bold; font-size: 1.6rem;
             min-width: 50px; text-align: center;
             box-shadow: 0 4px 0 #e2e8f0; cursor: pointer; transition: all 0.1s;
         }
-        .letter-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2e8f0; }
         .letter-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
 
         .success-pulse { animation: pulse 0.5s infinite alternate; }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.03); } }
 
-        /* --- My Face 精确五官定位 (已移除 Mouth) --- */
+        /* --- My Face 定位 --- */
         .face-part { 
             position: absolute;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -152,7 +142,6 @@
         </header>
 
         <main id="mainContent" class="flex-grow p-6 flex flex-col">
-            <!-- 课程主菜单 -->
             <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center">
                 <div class="py-2">
                     <div class="text-6xl mb-2">📚</div>
@@ -190,7 +179,6 @@
 
     <script>
         const views = ['lessonMenu', 'lesson1', 'lesson2', 'lesson3', 'lesson4', 'gameArea'];
-        let currentLesson = 1;
         let isAudioUnlocked = false;
         let bgmAudio = document.getElementById('bgm');
 
@@ -235,16 +223,16 @@
         ];
 
         const rawBodyData = [
-            { icon: '👤', display: "This is my _____", full: "This is my head.", correct: 'head' },
-            { icon: '💪', display: "These are my _____", full: "These are my arms.", correct: 'arms' },
-            { icon: '🦵', display: "This is my _____", full: "This is my leg.", correct: 'leg' },
-            { icon: '👣', display: "These are my _____", full: "These are my feet.", correct: 'feet' },
-            { icon: '👀', display: "These are my _____", full: "These are my eyes.", correct: 'eyes' },
-            { icon: '👂', display: "These are my _____", full: "These are my ears.", correct: 'ears' },
-            { icon: '👃', display: "This is my _____", full: "This is my nose.", correct: 'nose' },
-            { icon: '👄', display: "This is my _____", full: "This is my mouth.", correct: 'mouth' },
-            { icon: '✋', display: "This is my _____", full: "This is my hand.", correct: 'hand' },
-            { icon: '🦵', display: "This is my _____", full: "This is my knee.", correct: 'knee' }
+            { icon: '👤', correct: 'head' },
+            { icon: '💪', correct: 'arms' },
+            { icon: '🦵', correct: 'leg' },
+            { icon: '👣', correct: 'feet' },
+            { icon: '👀', correct: 'eyes' },
+            { icon: '👂', correct: 'ears' },
+            { icon: '👃', correct: 'nose' },
+            { icon: '👄', correct: 'mouth' },
+            { icon: '✋', correct: 'hand' },
+            { icon: '🦵', correct: 'knee' }
         ];
 
         const rawFamilyData = [
@@ -262,7 +250,6 @@
             { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
         ];
 
-        // --- Lesson 4 数据集 ---
         const rawSchoolData = [
             { name: 'notebook', icon: '📓' },
             { name: 'pencil', icon: '✏️' },
@@ -281,6 +268,7 @@
         let currentFaceParts = [];
         let flipCards = [], flippedIndices = [], matchedCount = 0, memoryPageIdx = 0;
         let sentIdx = 0, buildWords = [], buildLetters = [];
+        let matchSelected = null;
 
         function shuffleArray(array) {
             let shuffled = [...array];
@@ -314,7 +302,6 @@
                 msg.pitch = 1.1; 
                 let done = false;
                 msg.onend = () => { if(!done){ done=true; if(callback) callback(); }};
-                msg.onerror = () => { if(!done){ done=true; if(callback) callback(); }};
                 window.speechSynthesis.speak(msg);
             } else if (callback) callback();
         }
@@ -355,7 +342,7 @@
             if (n === 1) {
                 view.innerHTML = `<div class="grid gap-3 pt-4">${renderMenuBtn('intro', '👋', 'Self Intro', 'yellow')}${renderMenuBtn('greetings', '💬', 'Greetings', 'purple')}${renderMenuBtn('playTime', '🧸', 'Play Time', 'green')}${renderMenuBtn('quiz', '😊', 'Feelings', 'blue')}${renderMenuBtn('colors', '🌈', 'Colors', 'pink')}</div>`;
             } else if (n === 2) {
-                view.innerHTML = `<div class="grid gap-4 pt-4">${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}</div>`;
+                view.innerHTML = `<div class="grid gap-4 pt-4">${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}${renderMenuBtn('bodyMatch', '🔀', 'Body Match', 'green')}</div>`;
             } else if (n === 3) {
                 view.innerHTML = `<div class="grid gap-3 pt-4">${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'pink')}${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'orange')}${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'green')}</div>`;
             } else if (n === 4) {
@@ -380,6 +367,7 @@
             else if (game === 'quiz') { quizIdx = 0; activeData = shuffleArray(rawFeelingsData); renderQuiz(); }
             else if (game === 'colors') { colorIdx = 0; activeData = shuffleArray(rawColorsData); renderColors(); }
             else if (game === 'bodyParts') { bodyStep = 0; activeData = shuffleArray(rawBodyData); renderBody(); }
+            else if (game === 'bodyMatch') { matchedCount = 0; activeData = prepareMatchData(rawBodyData); renderBodyMatch(); }
             else if (game === 'myFace') { 
                 faceStep = 0; 
                 currentFaceParts = shuffleArray([
@@ -472,8 +460,8 @@
             const step = activeData[bodyStep];
             const distractors = shuffleArray(["ear", "nose", "hand", "mouth", "toe", "eye", "head", "arms", "leg", "feet"].filter(i => i !== step.correct));
             const options = shuffleArray([step.correct, distractors[0]]);
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold mb-10 text-blue-800 uppercase">${step.display}</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${options.map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
-            speak(step.full); 
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><div class="text-9xl mb-10 p-10 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold mb-10 text-blue-800 uppercase">This is my...</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${options.map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${o}</button>`).join('')}</div></div>`;
+            speak("This is my " + step.correct); 
         }
         function checkBody(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
@@ -482,51 +470,87 @@
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
+        // --- 核心更新：Lesson 2 Body 消消乐 (消除方块模式) ---
+        function prepareMatchData(data) {
+            const selection = shuffleArray(data).slice(0, 6);
+            const cards = [];
+            selection.forEach(item => {
+                cards.push({ type: 'icon', val: item.icon, pairId: item.correct, id: Math.random() });
+                cards.push({ type: 'text', val: item.correct, pairId: item.correct, id: Math.random() });
+            });
+            return shuffleArray(cards);
+        }
+
+        function renderBodyMatch() {
+            const container = document.getElementById('gameAreaView');
+            matchSelected = null;
+            container.innerHTML = `
+                <div class="text-center py-4 flex flex-col h-full animate-fade-in">
+                    <h2 class="text-2xl font-bold text-green-700 uppercase mb-4 tracking-tight">Body Match!</h2>
+                    <div class="grid grid-cols-3 gap-3" id="matchGrid">
+                        ${activeData.map((card, idx) => `
+                            <div id="match-card-${idx}" onclick="handleMatchClick(${idx})" class="match-tile shadow-md">
+                                <span class="${card.type === 'icon' ? 'text-4xl' : 'text-sm font-bold text-blue-800 uppercase'}">${card.val}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            speak("Match the pictures with the words!");
+        }
+
+        function handleMatchClick(idx) {
+            const card = activeData[idx];
+            const cardEl = document.getElementById(`match-card-${idx}`);
+            
+            if (cardEl.classList.contains('hidden') || cardEl.classList.contains('selected')) return;
+
+            speak(card.pairId);
+
+            if (matchSelected === null) {
+                matchSelected = idx;
+                cardEl.classList.add('selected');
+            } else {
+                const prevIdx = matchSelected;
+                const prevCard = activeData[prevIdx];
+                const prevEl = document.getElementById(`match-card-${prevIdx}`);
+
+                if (prevCard.pairId === card.pairId && prevCard.type !== card.type) {
+                    // 匹配成功：直接消除
+                    cardEl.classList.add('selected');
+                    setTimeout(() => {
+                        cardEl.classList.add('hidden');
+                        prevEl.classList.add('hidden');
+                        matchedCount++;
+                        if (matchedCount === 6) {
+                            showFeedback("Clear!", "bg-green-500");
+                            speak("Great job!", () => showView('lesson2'));
+                        }
+                    }, 400);
+                } else {
+                    // 匹配失败：重置
+                    cardEl.classList.add('selected');
+                    setTimeout(() => {
+                        cardEl.classList.remove('selected');
+                        prevEl.classList.remove('selected');
+                    }, 400);
+                }
+                matchSelected = null;
+            }
+        }
+
         // --- My Face 拼图功能 ---
         function renderFacePuzzle() {
             const container = document.getElementById('gameAreaView');
             const totalSteps = currentFaceParts.length;
             if (faceStep >= totalSteps) {
-                container.innerHTML = `
-                <div class="flex flex-col items-center py-10 animate-fade-in">
-                    <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner mb-10">
-                        <div class="face-part visible ears-container">${renderEarsSvg()}</div>
-                        <div class="face-part visible hair-svg">${renderHairSvg()}</div>
-                        <div class="face-part visible eyes-container">${renderEyesSvg()}</div>
-                        <div class="face-part visible nose-part text-5xl">👃</div>
-                        <div class="face-part visible tongue-part text-5xl animate-pulse">👅</div>
-                    </div>
-                    <p class="text-3xl font-bold text-orange-600 uppercase mb-8 success-pulse">Face Done!</p>
-                    <button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase btn-bounce">Back</button>
-                </div>`;
+                container.innerHTML = `<div class="flex flex-col items-center py-10 animate-fade-in"><div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner mb-10"><div class="face-part visible ears-container">${renderEarsSvg()}</div><div class="face-part visible hair-svg">${renderHairSvg()}</div><div class="face-part visible eyes-container">${renderEyesSvg()}</div><div class="face-part visible nose-part text-5xl">👃</div><div class="face-part visible tongue-part text-5xl animate-pulse">👅</div></div><p class="text-3xl font-bold text-orange-600 uppercase mb-8 success-pulse">Face Done!</p><button onclick="showView('lesson2')" class="px-10 py-5 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase btn-bounce">Back</button></div>`;
                 speak("Face Done! Excellent job!");
                 return;
             }
             const current = currentFaceParts[faceStep];
             const options = shuffleArray([current, currentFaceParts[(faceStep+1)%totalSteps], currentFaceParts[(faceStep+2)%totalSteps]]);
-            const getVisibility = (partId) => {
-                const idx = currentFaceParts.findIndex(p => p.id === partId);
-                return idx < faceStep ? 'visible' : '';
-            };
-            container.innerHTML = `
-            <div class="flex flex-col items-center py-6 h-full animate-fade-in">
-                <div class="text-center mb-4">
-                    <p class="text-gray-400 font-bold uppercase text-xs mb-1">Step ${faceStep + 1}/${totalSteps}</p>
-                    <p class="text-5xl font-black text-orange-600 tracking-widest animate-bounce uppercase">${current.name}</p>
-                </div>
-                <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner flex items-center justify-center mb-12">
-                    <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div>
-                    <div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div>
-                    <div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div>
-                    <div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div>
-                    <div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
-                </div>
-                <div class="w-full space-y-4 mt-auto pb-10">
-                    <div class="flex justify-around items-center px-4">
-                        ${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-lg btn-bounce text-6xl">${opt.icon}</button>`).join('')}
-                    </div>
-                </div>
-            </div>`;
+            const getVisibility = (partId) => { const idx = currentFaceParts.findIndex(p => p.id === partId); return idx < faceStep ? 'visible' : ''; };
+            container.innerHTML = `<div class="flex flex-col items-center py-6 h-full animate-fade-in"><div class="text-center mb-4"><p class="text-gray-400 font-bold uppercase text-xs mb-1">Step ${faceStep + 1}/${totalSteps}</p><p class="text-5xl font-black text-orange-600 tracking-widest animate-bounce uppercase">${current.name}</p></div><div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner flex items-center justify-center mb-12"><div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div><div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div><div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div><div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div><div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div></div><div class="w-full space-y-4 mt-auto pb-10"><div class="flex justify-around items-center px-4">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-lg btn-bounce text-6xl">${opt.icon}</button>`).join('')}</div></div></div>`;
             speak(current.full); 
         }
 
@@ -535,235 +559,94 @@
         function renderEarsSvg() { return `<div class="flex w-full justify-between"><svg class="w-10 h-14" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg><svg class="w-10 h-14" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg></div>`; }
 
         function checkFacePart(btn, selectedId, correctId, name) {
-            if (selectedId === correctId) {
-                btn.classList.add('bg-green-100', 'border-green-500');
-                showFeedback("Great!", "bg-green-500");
-                speak(name.toLowerCase(), () => { faceStep++; setTimeout(renderFacePuzzle, 1000); });
-            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
+            if (selectedId === correctId) { btn.classList.add('bg-green-100', 'border-green-500'); showFeedback("Great!", "bg-green-500"); speak(name.toLowerCase(), () => { faceStep++; setTimeout(renderFacePuzzle, 1000); }); }
+            else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // --- Lesson 3 Logic ---
-
         function renderFamilyMembers() {
-            const item = activeData[familyStep];
-            const other = rawFamilyData.filter(i => i.name !== item.name);
-            const wrong = other[Math.floor(Math.random() * other.length)].name;
+            const item = activeData[familyStep]; const other = rawFamilyData.filter(i => i.name !== item.name); const wrong = other[Math.floor(Math.random() * other.length)].name;
             document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Member ${familyStep + 1}/${activeData.length}</p><div class="text-9xl mb-10 p-10 bg-pink-50 rounded-full shadow-lg border-4 border-pink-100">${item.icon}</div><div class="grid grid-cols-1 gap-4 mt-auto w-full">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-2xl uppercase shadow-md option-btn">${opt}</button>`).join('')}</div></div>`;
             speak("Who is this?"); 
         }
-        function checkFamilyMember(btn, opt, correct) {
-            if (opt.toLowerCase() === correct.toLowerCase()) {
-                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
-                showFeedback("Correct!", "bg-green-500");
-                speak(correct, () => { familyStep++; if (familyStep < activeData.length) renderFamilyMembers(); else showView('lesson3'); });
-            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
-        }
+        function checkFamilyMember(btn, opt, correct) { if (opt.toLowerCase() === correct.toLowerCase()) { btn.classList.add('bg-green-500', 'text-white', 'border-green-600'); showFeedback("Correct!", "bg-green-500"); speak(correct, () => { familyStep++; if (familyStep < activeData.length) renderFamilyMembers(); else showView('lesson3'); }); } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); } }
 
-        function renderFlipGame() {
-            matchedCount = 0; flippedIndices = [];
-            const itemsPerPage = 3;
-            const start = memoryPageIdx * itemsPerPage;
-            let pageItems = rawFamilyData.slice(start, start + itemsPerPage);
-            if (pageItems.length > 0 && pageItems.length < itemsPerPage) {
-                const pool = rawFamilyData.filter(item => !pageItems.includes(item));
-                pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)];
-            }
-            const cards = [];
-            pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); });
-            flipCards = shuffleArray(cards);
-            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Page ${memoryPageIdx + 1}/3</p><div class="memory-grid" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-6xl' : 'text-lg font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div></div>`;
-            speak("Match the cards!");
-        }
-        function handleFlip(idx) {
-            const cardEl = document.getElementById(`card-${idx}`);
-            if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return;
-            cardEl.classList.add('flipped');
-            flippedIndices.push(idx);
-            speak(flipCards[idx].name);
-            if (flippedIndices.length === 2) {
-                const [i1, i2] = flippedIndices;
-                if (flipCards[i1].name === flipCards[i2].name) {
-                    setTimeout(() => {
-                        document.getElementById(`card-${i1}`).classList.add('matched');
-                        document.getElementById(`card-${i2}`).classList.add('matched');
-                        matchedCount++; flippedIndices = [];
-                        if (matchedCount === 3) { setTimeout(() => { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); }, 1200); }
-                    }, 600);
-                } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 1000); }
-            }
-        }
+        function renderFlipGame() { matchedCount = 0; flippedIndices = []; const itemsPerPage = 3; const start = memoryPageIdx * itemsPerPage; let pageItems = rawFamilyData.slice(start, start + itemsPerPage); if (pageItems.length > 0 && pageItems.length < itemsPerPage) { const pool = rawFamilyData.filter(item => !pageItems.includes(item)); pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)]; } const cards = []; pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); }); flipCards = shuffleArray(cards); document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Page ${memoryPageIdx + 1}/3</p><div class="memory-grid" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-6xl' : 'text-lg font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div></div>`; speak("Match the cards!"); }
+        function handleFlip(idx) { const cardEl = document.getElementById(`card-${idx}`); if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return; cardEl.classList.add('flipped'); flippedIndices.push(idx); speak(flipCards[idx].name); if (flippedIndices.length === 2) { const [i1, i2] = flippedIndices; if (flipCards[i1].name === flipCards[i2].name) { setTimeout(() => { document.getElementById(`card-${i1}`).classList.add('matched'); document.getElementById(`card-${i2}`).classList.add('matched'); matchedCount++; flippedIndices = []; if (matchedCount === 3) { setTimeout(() => { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); }, 1200); } }, 600); } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 1000); } } }
 
-        function renderSentences() {
-            const data = activeData[sentIdx]; buildWords = [];
-            const shuffled = shuffleArray([...data.words]);
-            const colors = ['bg-red-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100'];
-            document.getElementById('gameAreaView').innerHTML = `
-                <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p>
-                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div>
-                    <div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[140px] flex flex-wrap items-center justify-center gap-3" id="sentOutput">
-                        <span class="text-gray-300 italic">Tap words below to build...</span>
-                    </div>
-                    <div class="flex flex-wrap justify-center gap-3 mt-4" id="wordBank">
-                        ${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}
-                    </div>
-                </div>`;
-            speak(data.full);
+        function renderSentences() { 
+            const data = activeData[sentIdx]; buildWords = []; const shuffled = shuffleArray([...data.words]); 
+            const colors = ['bg-red-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100']; 
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p><div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div><div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[140px] flex flex-wrap items-center justify-center gap-3" id="sentOutput"><span class="text-gray-300 italic">Tap words below to build...</span></div><div class="flex flex-wrap justify-center gap-3 mt-4" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div></div>`; 
+            speak(data.full); 
         }
-
-        function addWordToSent(btn, word) {
-            btn.classList.add('used'); buildWords.push(word);
-            refreshSentenceOutput(); speak(word); checkSentenceComplete();
-        }
-
-        function removeWordFromSent(wordIdx) {
-            const wordToRemove = buildWords[wordIdx];
-            buildWords.splice(wordIdx, 1);
-            const bankButtons = document.querySelectorAll('#wordBank button');
-            for (let btn of bankButtons) {
-                if (btn.innerText === wordToRemove && btn.classList.contains('used')) {
-                    btn.classList.remove('used'); break;
-                }
-            }
-            refreshSentenceOutput(); speak("removed");
-        }
-
-        function refreshSentenceOutput() {
-            const output = document.getElementById('sentOutput');
-            if (buildWords.length === 0) {
-                output.innerHTML = `<span class="text-gray-300 italic">Tap words below to build...</span>`; return;
-            }
-            output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-2xl font-bold text-green-800 px-4 py-2 bg-white rounded-xl border-2 border-green-200 animate-fade-in shadow-sm m-1 transition-transform active:scale-95">${w}</button>`).join('');
-        }
-
-        function checkSentenceComplete() {
-            const data = activeData[sentIdx];
-            if (buildWords.length === data.words.length) {
-                if (buildWords.join(' ') === data.words.join(' ')) {
-                    const output = document.getElementById('sentOutput');
-                    output.classList.add('success-pulse', 'bg-green-100');
-                    showFeedback("Perfect!", "bg-green-500");
-                    speak(data.full, () => { setTimeout(() => { sentIdx++; if (sentIdx < activeData.length) renderSentences(); else showView('lesson3'); }, 1800); });
-                } else { showFeedback("Check the order!", "bg-red-400"); speak("Try again"); }
-            }
-        }
-
-        // --- Lesson 4 核心优化逻辑 ---
+        function addWordToSent(btn, word) { btn.classList.add('used'); buildWords.push(word); refreshSentenceOutput(); speak(word); checkSentenceComplete(); }
+        function removeWordFromSent(wordIdx) { const wordToRemove = buildWords[wordIdx]; buildWords.splice(wordIdx, 1); const bankButtons = document.querySelectorAll('#wordBank button'); for (let btn of bankButtons) { if (btn.innerText === wordToRemove && btn.classList.contains('used')) { btn.classList.remove('used'); break; } } refreshSentenceOutput(); speak("removed"); }
+        function refreshSentenceOutput() { const output = document.getElementById('sentOutput'); if (buildWords.length === 0) { output.innerHTML = `<span class="text-gray-300 italic">Tap words below to build...</span>`; return; } output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-2xl font-bold text-green-800 px-4 py-2 bg-white rounded-xl border-2 border-green-200 animate-fade-in shadow-sm m-1 transition-transform active:scale-95">${w}</button>`).join(''); }
+        function checkSentenceComplete() { const data = activeData[sentIdx]; if (buildWords.length === data.words.length) { if (buildWords.join(' ') === data.words.join(' ')) { const output = document.getElementById('sentOutput'); output.classList.add('success-pulse', 'bg-green-100'); showFeedback("Perfect!", "bg-green-500"); speak(data.full, () => { setTimeout(() => { sentIdx++; if (sentIdx < activeData.length) renderSentences(); else showView('lesson3'); }, 1800); }); } else { showFeedback("Check the order!", "bg-red-400"); speak("Try again"); } } }
 
         function renderSchoolSupplies() {
-            const item = activeData[schoolStep];
-            const distractors = shuffleArray(rawSchoolData.filter(i => i.name !== item.name));
-            const options = shuffleArray([item.name, distractors[0].name]);
-            document.getElementById('gameAreaView').innerHTML = `
-                <div class="text-center py-10 flex flex-col items-center h-full animate-fade-in">
-                    <p class="text-gray-400 font-bold uppercase text-xs mb-4">Item ${schoolStep + 1}/${activeData.length}</p>
-                    <div class="text-9xl mb-10 p-10 bg-orange-50 rounded-full border-4 border-orange-100 shadow-lg">${item.icon}</div>
-                    <div class="text-3xl font-bold mb-8 text-orange-700 uppercase">What is this?</div>
-                    <div class="grid grid-cols-2 gap-4 mt-auto w-full">
-                        ${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${opt}</button>`).join('')}
-                    </div>
-                </div>`;
+            const item = activeData[schoolStep]; const distractors = shuffleArray(rawSchoolData.filter(i => i.name !== item.name)); const options = shuffleArray([item.name, distractors[0].name]);
+            document.getElementById('gameAreaView').innerHTML = `<div class="text-center py-10 flex flex-col items-center h-full animate-fade-in"><p class="text-gray-400 font-bold uppercase text-xs mb-4">Item ${schoolStep + 1}/${activeData.length}</p><div class="text-9xl mb-10 p-10 bg-orange-50 rounded-full border-4 border-orange-100 shadow-lg">${item.icon}</div><div class="text-3xl font-bold mb-8 text-orange-700 uppercase">What is this?</div><div class="grid grid-cols-2 gap-4 mt-auto w-full">${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${opt}</button>`).join('')}</div></div>`;
             speak("What is this? It is a " + item.name);
         }
+        function checkSchoolItem(btn, opt, correct) { if (opt.toLowerCase() === correct.toLowerCase()) { btn.classList.add('bg-green-500', 'text-white', 'border-green-600'); speak(correct, () => { schoolStep++; if (schoolStep < activeData.length) renderSchoolSupplies(); else showView('lesson4'); }); } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); } }
 
-        function checkSchoolItem(btn, opt, correct) {
-            if (opt.toLowerCase() === correct.toLowerCase()) {
-                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
-                speak(correct, () => { schoolStep++; if (schoolStep < activeData.length) renderSchoolSupplies(); else showView('lesson4'); });
-            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
-        }
-
-        // --- Word Builder：核心拼写游戏优化 ---
+        // --- Word Builder：核心拼写游戏渲染 (小写显示、自动缩放、空格处理) ---
         function renderWordBuilder() {
             const item = activeData[builderStep];
             buildLetters = [];
-            // 备选字母打乱顺序，不包含空格
-            const lettersPool = shuffleArray(item.name.replace(/\s/g, '').split(''));
+            const targetWord = item.name;
+            const lettersPool = shuffleArray(targetWord.replace(/\s/g, '').split(''));
             const colors = ['bg-red-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100', 'bg-orange-100'];
+            const themeColor = 'blue';
 
             document.getElementById('gameAreaView').innerHTML = `
                 <div class="text-center space-y-4 py-4 flex flex-col h-full animate-fade-in">
                     <p class="text-gray-400 font-bold uppercase text-xs">Word ${builderStep + 1}/${activeData.length}</p>
-                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-blue-50 mx-auto">${item.icon}</div>
-                    
-                    <!-- 拼写输出区：强制不换行，字体自动缩放 -->
-                    <div id="letterOutput" class="p-4 bg-blue-50 rounded-[30px] border-2 border-blue-100 min-h-[110px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap">
+                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-${themeColor}-50 mx-auto">${item.icon}</div>
+                    <div id="letterOutput" class="p-4 bg-${themeColor}-50 rounded-[30px] border-2 border-${themeColor}-100 min-h-[110px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap">
                         <span class="text-gray-300 italic">Tap letters below...</span>
                     </div>
-
-                    <!-- 字母备选区 -->
                     <div class="flex flex-wrap justify-center gap-2 mt-4" id="letterBank">
                         ${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}
                     </div>
                 </div>`;
-            speak(item.name);
+            speak(targetWord);
         }
 
-        function addLetterToWord(btn, char) {
-            btn.classList.add('used');
-            buildLetters.push(char);
-            refreshLetterOutput();
-            speak(char);
-            checkWordComplete();
-        }
-
+        function addLetterToWord(btn, char) { btn.classList.add('used'); buildLetters.push(char); refreshLetterOutput(); speak(char); checkWordComplete(); }
         function removeLetterFromWord(idx) {
-            const charToRemove = buildLetters[idx];
-            buildLetters.splice(idx, 1);
+            const charToRemove = buildLetters[idx]; buildLetters.splice(idx, 1);
             const bankButtons = document.querySelectorAll('#letterBank button');
-            for (let btn of bankButtons) {
-                if (btn.innerText === charToRemove && btn.classList.contains('used')) {
-                    btn.classList.remove('used'); break;
-                }
-            }
+            for (let btn of bankButtons) { if (btn.innerText === charToRemove && btn.classList.contains('used')) { btn.classList.remove('used'); break; } }
             refreshLetterOutput(); speak("removed");
         }
 
         function refreshLetterOutput() {
-            const output = document.getElementById('letterOutput');
-            const item = activeData[builderStep];
-            if (buildLetters.length === 0) {
-                output.innerHTML = `<span class="text-gray-300 italic">Tap letters below...</span>`; return;
-            }
-
-            // --- 动态字体缩放逻辑 ---
+            const output = document.getElementById('letterOutput'); const item = activeData[builderStep]; const targetWord = item.name;
+            if (buildLetters.length === 0) { output.innerHTML = `<span class="text-gray-300 italic">Tap letters below...</span>`; return; }
             let fontSize = "text-3xl";
-            if (item.name.length > 10) fontSize = "text-lg";
-            else if (item.name.length > 8) fontSize = "text-xl";
-            else if (item.name.length > 6) fontSize = "text-2xl";
-
-            // --- 智能空格渲染与单词排列逻辑 ---
-            let html = "";
-            let currentLetterIdx = 0;
-            const originalChars = item.name.split('');
-
+            if (targetWord.length > 10) fontSize = "text-lg"; else if (targetWord.length > 8) fontSize = "text-xl"; else if (targetWord.length > 6) fontSize = "text-2xl";
+            let html = ""; let currentLetterIdx = 0; const originalChars = targetWord.split(''); const themeColor = 'blue';
             originalChars.forEach((char) => {
-                if (char === ' ') {
-                    // 渲染明显的单词间距
-                    html += `<div class="w-6"></div>`;
-                } else {
+                if (char === ' ') { html += `<div class="w-6"></div>`; } 
+                else {
                     if (currentLetterIdx < buildLetters.length) {
                         const l = buildLetters[currentLetterIdx];
-                        html += `<button onclick="removeLetterFromWord(${currentLetterIdx})" class="${fontSize} font-black text-blue-800 px-3 py-1 bg-white rounded-xl border-2 border-blue-200 animate-fade-in shadow-sm mx-0.5 transition-transform active:scale-95 lowercase">${l}</button>`;
+                        html += `<button onclick="removeLetterFromWord(${currentLetterIdx})" class="${fontSize} font-black text-${themeColor}-800 px-3 py-1 bg-white rounded-xl border-2 border-${themeColor}-200 animate-fade-in shadow-sm mx-0.5 transition-transform active:scale-95 lowercase">${l}</button>`;
                         currentLetterIdx++;
-                    } else {
-                        // 预留未拼写的占位符
-                        html += `<div class="w-6 h-10 border-b-4 border-blue-200 mx-1"></div>`;
-                    }
+                    } else { html += `<div class="w-6 h-10 border-b-4 border-${themeColor}-200 mx-1"></div>`; }
                 }
             });
             output.innerHTML = html;
         }
 
         function checkWordComplete() {
-            const item = activeData[builderStep];
-            const target = item.name.replace(/\s/g, ''); 
-            if (buildLetters.length === target.length) {
-                if (buildLetters.join('') === target) {
-                    const output = document.getElementById('letterOutput');
-                    output.classList.add('success-pulse', 'bg-green-100');
-                    showFeedback("Awesome!", "bg-green-500");
-                    speak(item.name, () => { setTimeout(() => { builderStep++; if (builderStep < activeData.length) renderWordBuilder(); else showView('lesson4'); }, 1800); });
+            const item = activeData[builderStep]; const targetWord = item.name; const targetNoSpace = targetWord.replace(/\s/g, ''); 
+            if (buildLetters.length === targetNoSpace.length) {
+                if (buildLetters.join('') === targetNoSpace) {
+                    const output = document.getElementById('letterOutput'); output.classList.add('success-pulse', 'bg-green-100'); showFeedback("Awesome!", "bg-green-500");
+                    speak(targetWord, () => { setTimeout(() => { builderStep++; if (builderStep < activeData.length) renderWordBuilder(); else showView('lesson4'); }, 1800); });
                 } else { showFeedback("Check spelling!", "bg-red-400"); speak("Try again"); }
             }
         }
