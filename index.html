@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lesson 1, 2 & 3 Learning App</title>
+    <title>Lesson 1, 2, 3 & 4 Learning App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
@@ -92,8 +92,18 @@
             text-align: center;
         }
         .word-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2e8f0; }
-        .word-chip.used { opacity: 0.2; pointer-events: none; }
+        .word-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
         
+        /* 字母卡片样式 */
+        .letter-chip {
+            background: white; border: 2px solid #e2e8f0; border-radius: 10px;
+            padding: 12px; font-weight: bold; font-size: 1.6rem;
+            min-width: 50px; text-align: center;
+            box-shadow: 0 4px 0 #e2e8f0; cursor: pointer; transition: all 0.1s;
+        }
+        .letter-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 #e2e8f0; }
+        .letter-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
+
         .success-pulse { animation: pulse 0.5s infinite alternate; }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.03); } }
 
@@ -115,7 +125,7 @@
         .eyes-container { top: 30%; width: 62%; left: 19%; display: flex; justify-content: space-between; z-index: 15; }
         .ears-container { top: 34%; width: 114%; left: -7%; display: flex; justify-content: space-between; z-index: 5; }
         .nose-part { top: 48%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 16; }
-        .tongue-part { top: 68%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 17; } /* 舌头位置微调 */
+        .tongue-part { top: 68%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 17; } 
 
     </style>
 </head>
@@ -128,7 +138,7 @@
     <div id="audioUnlocker">
         <div class="text-8xl mb-6">🎒</div>
         <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase tracking-tighter">Learning App</h1>
-        <p class="text-gray-500 mb-8 font-bold text-lg">Lessons 1, 2 & 3</p>
+        <p class="text-gray-500 mb-8 font-bold text-lg">Lessons 1 - 4</p>
         <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase tracking-wide">
             Start Learning
         </button>
@@ -142,23 +152,28 @@
         </header>
 
         <main id="mainContent" class="flex-grow p-6 flex flex-col">
+            <!-- 课程主菜单 -->
             <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center">
                 <div class="py-2">
                     <div class="text-6xl mb-2">📚</div>
                     <h2 class="text-2xl font-bold text-gray-800 uppercase">Select Lesson</h2>
                 </div>
-                <div class="grid gap-4">
-                    <button onclick="goToLesson(1)" class="p-6 bg-yellow-100 rounded-[30px] border-b-8 border-yellow-300 btn-bounce">
-                        <div class="text-3xl mb-1">🏫</div>
-                        <div class="text-xl font-bold text-yellow-800 uppercase">Lesson 1</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="goToLesson(1)" class="p-4 bg-yellow-100 rounded-[25px] border-b-4 border-yellow-300 btn-bounce">
+                        <div class="text-2xl mb-1">🏫</div>
+                        <div class="text-lg font-bold text-yellow-800 uppercase">L1</div>
                     </button>
-                    <button onclick="goToLesson(2)" class="p-6 bg-blue-100 rounded-[30px] border-b-8 border-blue-300 btn-bounce">
-                        <div class="text-3xl mb-1">👦</div>
-                        <div class="text-xl font-bold text-blue-800 uppercase">Lesson 2</div>
+                    <button onclick="goToLesson(2)" class="p-4 bg-blue-100 rounded-[25px] border-b-4 border-blue-300 btn-bounce">
+                        <div class="text-2xl mb-1">👦</div>
+                        <div class="text-lg font-bold text-blue-800 uppercase">L2</div>
                     </button>
-                    <button onclick="goToLesson(3)" class="p-6 bg-pink-100 rounded-[30px] border-b-8 border-pink-300 btn-bounce">
-                        <div class="text-3xl mb-1">🏠</div>
-                        <div class="text-xl font-bold text-pink-800 uppercase">Lesson 3</div>
+                    <button onclick="goToLesson(3)" class="p-4 bg-pink-100 rounded-[25px] border-b-4 border-pink-300 btn-bounce">
+                        <div class="text-2xl mb-1">🏠</div>
+                        <div class="text-lg font-bold text-pink-800 uppercase">L3</div>
+                    </button>
+                    <button onclick="goToLesson(4)" class="p-4 bg-orange-100 rounded-[25px] border-b-4 border-orange-300 btn-bounce">
+                        <div class="text-2xl mb-1">🎒</div>
+                        <div class="text-lg font-bold text-orange-800 uppercase">L4</div>
                     </button>
                 </div>
             </div>
@@ -166,6 +181,7 @@
             <div id="lesson1View" class="hidden w-full space-y-3 fade-in"></div>
             <div id="lesson2View" class="hidden w-full space-y-4 fade-in"></div>
             <div id="lesson3View" class="hidden w-full space-y-4 fade-in"></div>
+            <div id="lesson4View" class="hidden w-full space-y-4 fade-in"></div>
             <div id="gameAreaView" class="hidden flex-grow flex flex-col fade-in"></div>
         </main>
     </div>
@@ -173,7 +189,7 @@
     <div id="feedback" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-10 py-5 rounded-3xl text-white font-bold text-3xl opacity-0 transition-opacity z-[999] pointer-events-none shadow-2xl"></div>
 
     <script>
-        const views = ['lessonMenu', 'lesson1', 'lesson2', 'lesson3', 'gameArea'];
+        const views = ['lessonMenu', 'lesson1', 'lesson2', 'lesson3', 'lesson4', 'gameArea'];
         let currentLesson = 1;
         let isAudioUnlocked = false;
         let bgmAudio = document.getElementById('bgm');
@@ -246,12 +262,25 @@
             { photo: '👨‍👩‍👧‍👦', words: ['I', 'eat with', 'my family.'], full: "I eat with my family." }
         ];
 
+        // --- Lesson 4 数据集 ---
+        const rawSchoolData = [
+            { name: 'notebook', icon: '📓' },
+            { name: 'pencil', icon: '✏️' },
+            { name: 'ruler', icon: '📏' },
+            { name: 'school bag', icon: '🎒' },
+            { name: 'pen', icon: '🖋️' },
+            { name: 'eraser', icon: '🧼' },
+            { name: 'book', icon: '📖' },
+            { name: 'crayon', icon: '🖍️' },
+            { name: 'pencil case', icon: '👝' }
+        ];
+
         let activeData = [];
         let introState = { gender: null, step: 0 };
-        let greetingIdx = 0, playStep = 0, quizIdx = 0, colorIdx = 0, bodyStep = 0, familyStep = 0, faceStep = 0;
+        let greetingIdx = 0, playStep = 0, quizIdx = 0, colorIdx = 0, bodyStep = 0, familyStep = 0, faceStep = 0, schoolStep = 0, builderStep = 0;
         let currentFaceParts = [];
         let flipCards = [], flippedIndices = [], matchedCount = 0, memoryPageIdx = 0;
-        let sentIdx = 0, buildWords = [];
+        let sentIdx = 0, buildWords = [], buildLetters = [];
 
         function shuffleArray(array) {
             let shuffled = [...array];
@@ -329,6 +358,8 @@
                 view.innerHTML = `<div class="grid gap-4 pt-4">${renderMenuBtn('bodyParts', '💪', 'My Body', 'blue')}${renderMenuBtn('myFace', '👦', 'My Face', 'orange')}</div>`;
             } else if (n === 3) {
                 view.innerHTML = `<div class="grid gap-3 pt-4">${renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family', 'pink')}${renderMenuBtn('familyFlip', '🃏', 'Flip Game', 'orange')}${renderMenuBtn('familyFun', '🍲', 'Family Fun', 'green')}</div>`;
+            } else if (n === 4) {
+                view.innerHTML = `<div class="grid gap-4 pt-4">${renderMenuBtn('schoolSupplies', '📐', 'School Supplies', 'orange')}${renderMenuBtn('wordBuilder', '📝', 'Word Builder', 'blue')}</div>`;
             }
         }
 
@@ -351,7 +382,6 @@
             else if (game === 'bodyParts') { bodyStep = 0; activeData = shuffleArray(rawBodyData); renderBody(); }
             else if (game === 'myFace') { 
                 faceStep = 0; 
-                // 核心：移除 Mouth，仅保留 Hair, Ears, Eyes, Nose, Tongue
                 currentFaceParts = shuffleArray([
                     { id: 'hair', name: 'HAIR', full: 'Where is the hair?', icon: '🦱' },
                     { id: 'ears', name: 'EARS', full: 'Where are the ears?', icon: '👂' },
@@ -364,6 +394,8 @@
             else if (game === 'familyMembers') { familyStep = 0; activeData = shuffleArray(rawFamilyData); renderFamilyMembers(); }
             else if (game === 'familyFlip') { memoryPageIdx = 0; renderFlipGame(); }
             else if (game === 'familyFun') { sentIdx = 0; activeData = shuffleArray(rawSentenceDataArr); renderSentences(); }
+            else if (game === 'schoolSupplies') { schoolStep = 0; activeData = shuffleArray(rawSchoolData); renderSchoolSupplies(); }
+            else if (game === 'wordBuilder') { builderStep = 0; activeData = shuffleArray(rawSchoolData); renderWordBuilder(); }
         }
 
         // --- Logic Implementation ---
@@ -450,12 +482,10 @@
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
         }
 
-        // --- 核心更新：My Face 拼图功能 (移除 Mouth，修正 Tongue 位置) ---
+        // --- My Face 拼图功能 ---
         function renderFacePuzzle() {
             const container = document.getElementById('gameAreaView');
             const totalSteps = currentFaceParts.length;
-
-            // 最终画面同步逻辑
             if (faceStep >= totalSteps) {
                 container.innerHTML = `
                 <div class="flex flex-col items-center py-10 animate-fade-in">
@@ -472,23 +502,18 @@
                 speak("Face Done! Excellent job!");
                 return;
             }
-
             const current = currentFaceParts[faceStep];
             const options = shuffleArray([current, currentFaceParts[(faceStep+1)%totalSteps], currentFaceParts[(faceStep+2)%totalSteps]]);
-
             const getVisibility = (partId) => {
                 const idx = currentFaceParts.findIndex(p => p.id === partId);
                 return idx < faceStep ? 'visible' : '';
             };
-
             container.innerHTML = `
             <div class="flex flex-col items-center py-6 h-full animate-fade-in">
                 <div class="text-center mb-4">
                     <p class="text-gray-400 font-bold uppercase text-xs mb-1">Step ${faceStep + 1}/${totalSteps}</p>
-                    <!-- 生词实时显示 -->
                     <p class="text-5xl font-black text-orange-600 tracking-widest animate-bounce uppercase">${current.name}</p>
                 </div>
-                
                 <div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 shadow-inner flex items-center justify-center mb-12">
                     <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div>
                     <div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div>
@@ -496,7 +521,6 @@
                     <div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div>
                     <div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
                 </div>
-                
                 <div class="w-full space-y-4 mt-auto pb-10">
                     <div class="flex justify-around items-center px-4">
                         ${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-6 bg-white border-2 border-gray-100 rounded-3xl shadow-lg btn-bounce text-6xl">${opt.icon}</button>`).join('')}
@@ -506,16 +530,9 @@
             speak(current.full); 
         }
 
-        // SVG 器官渲染
-        function renderHairSvg() { 
-            return `<svg viewBox="0 0 100 50" class="w-full h-full"><path d="M5,45 Q5,5 50,5 Q95,5 95,45 L95,45 Q80,35 65,45 Q50,30 35,45 Q20,35 5,45 Z" fill="#2d241e"/></svg>`; 
-        }
-        function renderEyesSvg() { 
-            return `<div class="flex w-full justify-around"><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg></div>`; 
-        }
-        function renderEarsSvg() { 
-            return `<div class="flex w-full justify-between"><svg class="w-10 h-14" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg><svg class="w-10 h-14" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg></div>`; 
-        }
+        function renderHairSvg() { return `<svg viewBox="0 0 100 50" class="w-full h-full"><path d="M5,45 Q5,5 50,5 Q95,5 95,45 L95,45 Q80,35 65,45 Q50,30 35,45 Q20,35 5,45 Z" fill="#2d241e"/></svg>`; }
+        function renderEyesSvg() { return `<div class="flex w-full justify-around"><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg></div>`; }
+        function renderEarsSvg() { return `<div class="flex w-full justify-between"><svg class="w-10 h-14" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg><svg class="w-10 h-14" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg></div>`; }
 
         function checkFacePart(btn, selectedId, correctId, name) {
             if (selectedId === correctId) {
@@ -579,26 +596,24 @@
         function renderSentences() {
             const data = activeData[sentIdx]; buildWords = [];
             const shuffled = shuffleArray([...data.words]);
+            const colors = ['bg-red-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100'];
             document.getElementById('gameAreaView').innerHTML = `
                 <div class="text-center space-y-4 py-2 flex flex-col h-full animate-fade-in">
                     <p class="text-gray-400 font-bold uppercase text-xs">Sentence ${sentIdx + 1}/6</p>
                     <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-green-50 mx-auto">${data.photo}</div>
                     <div class="p-6 bg-green-50 rounded-[30px] border-2 border-green-100 min-h-[140px] flex flex-wrap items-center justify-center gap-3" id="sentOutput">
-                        <span class="text-gray-300 italic">Tap words to build...</span>
+                        <span class="text-gray-300 italic">Tap words below to build...</span>
                     </div>
                     <div class="flex flex-wrap justify-center gap-3 mt-4" id="wordBank">
-                        ${shuffled.map(w => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip">${w}</button>`).join('')}
+                        ${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}
                     </div>
                 </div>`;
             speak(data.full);
         }
 
         function addWordToSent(btn, word) {
-            btn.classList.add('used'); 
-            buildWords.push(word);
-            refreshSentenceOutput();
-            speak(word);
-            checkSentenceComplete();
+            btn.classList.add('used'); buildWords.push(word);
+            refreshSentenceOutput(); speak(word); checkSentenceComplete();
         }
 
         function removeWordFromSent(wordIdx) {
@@ -607,23 +622,18 @@
             const bankButtons = document.querySelectorAll('#wordBank button');
             for (let btn of bankButtons) {
                 if (btn.innerText === wordToRemove && btn.classList.contains('used')) {
-                    btn.classList.remove('used');
-                    break; 
+                    btn.classList.remove('used'); break;
                 }
             }
-            refreshSentenceOutput();
-            speak("removed");
+            refreshSentenceOutput(); speak("removed");
         }
 
         function refreshSentenceOutput() {
             const output = document.getElementById('sentOutput');
             if (buildWords.length === 0) {
-                output.innerHTML = `<span class="text-gray-300 italic">Tap words to build...</span>`;
-                return;
+                output.innerHTML = `<span class="text-gray-300 italic">Tap words below to build...</span>`; return;
             }
-            output.innerHTML = buildWords.map((w, idx) => 
-                `<button onclick="removeWordFromSent(${idx})" class="text-2xl font-bold text-green-800 px-3 py-1 bg-white rounded-xl border border-green-200 animate-fade-in shadow-sm m-1">${w}</button>`
-            ).join('');
+            output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-2xl font-bold text-green-800 px-4 py-2 bg-white rounded-xl border-2 border-green-200 animate-fade-in shadow-sm m-1 transition-transform active:scale-95">${w}</button>`).join('');
         }
 
         function checkSentenceComplete() {
@@ -633,17 +643,128 @@
                     const output = document.getElementById('sentOutput');
                     output.classList.add('success-pulse', 'bg-green-100');
                     showFeedback("Perfect!", "bg-green-500");
-                    speak(data.full, () => {
-                        setTimeout(() => { 
-                            sentIdx++; 
-                            if (sentIdx < 6) renderSentences(); 
-                            else showView('lesson3'); 
-                        }, 1800);
-                    });
-                } else { 
-                    showFeedback("Check the order!", "bg-red-400"); 
-                    speak("Try again");
+                    speak(data.full, () => { setTimeout(() => { sentIdx++; if (sentIdx < activeData.length) renderSentences(); else showView('lesson3'); }, 1800); });
+                } else { showFeedback("Check the order!", "bg-red-400"); speak("Try again"); }
+            }
+        }
+
+        // --- Lesson 4 核心优化逻辑 ---
+
+        function renderSchoolSupplies() {
+            const item = activeData[schoolStep];
+            const distractors = shuffleArray(rawSchoolData.filter(i => i.name !== item.name));
+            const options = shuffleArray([item.name, distractors[0].name]);
+            document.getElementById('gameAreaView').innerHTML = `
+                <div class="text-center py-10 flex flex-col items-center h-full animate-fade-in">
+                    <p class="text-gray-400 font-bold uppercase text-xs mb-4">Item ${schoolStep + 1}/${activeData.length}</p>
+                    <div class="text-9xl mb-10 p-10 bg-orange-50 rounded-full border-4 border-orange-100 shadow-lg">${item.icon}</div>
+                    <div class="text-3xl font-bold mb-8 text-orange-700 uppercase">What is this?</div>
+                    <div class="grid grid-cols-2 gap-4 mt-auto w-full">
+                        ${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-6 bg-white border-2 rounded-2xl font-bold text-xl uppercase shadow-md option-btn">${opt}</button>`).join('')}
+                    </div>
+                </div>`;
+            speak("What is this? It is a " + item.name);
+        }
+
+        function checkSchoolItem(btn, opt, correct) {
+            if (opt.toLowerCase() === correct.toLowerCase()) {
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                speak(correct, () => { schoolStep++; if (schoolStep < activeData.length) renderSchoolSupplies(); else showView('lesson4'); });
+            } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
+        }
+
+        // --- Word Builder：核心拼写游戏优化 ---
+        function renderWordBuilder() {
+            const item = activeData[builderStep];
+            buildLetters = [];
+            // 备选字母打乱顺序，不包含空格
+            const lettersPool = shuffleArray(item.name.replace(/\s/g, '').split(''));
+            const colors = ['bg-red-100', 'bg-blue-100', 'bg-green-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100', 'bg-orange-100'];
+
+            document.getElementById('gameAreaView').innerHTML = `
+                <div class="text-center space-y-4 py-4 flex flex-col h-full animate-fade-in">
+                    <p class="text-gray-400 font-bold uppercase text-xs">Word ${builderStep + 1}/${activeData.length}</p>
+                    <div class="text-9xl p-4 bg-white rounded-3xl shadow-md border-2 border-blue-50 mx-auto">${item.icon}</div>
+                    
+                    <!-- 拼写输出区：强制不换行，字体自动缩放 -->
+                    <div id="letterOutput" class="p-4 bg-blue-50 rounded-[30px] border-2 border-blue-100 min-h-[110px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap">
+                        <span class="text-gray-300 italic">Tap letters below...</span>
+                    </div>
+
+                    <!-- 字母备选区 -->
+                    <div class="flex flex-wrap justify-center gap-2 mt-4" id="letterBank">
+                        ${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}
+                    </div>
+                </div>`;
+            speak(item.name);
+        }
+
+        function addLetterToWord(btn, char) {
+            btn.classList.add('used');
+            buildLetters.push(char);
+            refreshLetterOutput();
+            speak(char);
+            checkWordComplete();
+        }
+
+        function removeLetterFromWord(idx) {
+            const charToRemove = buildLetters[idx];
+            buildLetters.splice(idx, 1);
+            const bankButtons = document.querySelectorAll('#letterBank button');
+            for (let btn of bankButtons) {
+                if (btn.innerText === charToRemove && btn.classList.contains('used')) {
+                    btn.classList.remove('used'); break;
                 }
+            }
+            refreshLetterOutput(); speak("removed");
+        }
+
+        function refreshLetterOutput() {
+            const output = document.getElementById('letterOutput');
+            const item = activeData[builderStep];
+            if (buildLetters.length === 0) {
+                output.innerHTML = `<span class="text-gray-300 italic">Tap letters below...</span>`; return;
+            }
+
+            // --- 动态字体缩放逻辑 ---
+            let fontSize = "text-3xl";
+            if (item.name.length > 10) fontSize = "text-lg";
+            else if (item.name.length > 8) fontSize = "text-xl";
+            else if (item.name.length > 6) fontSize = "text-2xl";
+
+            // --- 智能空格渲染与单词排列逻辑 ---
+            let html = "";
+            let currentLetterIdx = 0;
+            const originalChars = item.name.split('');
+
+            originalChars.forEach((char) => {
+                if (char === ' ') {
+                    // 渲染明显的单词间距
+                    html += `<div class="w-6"></div>`;
+                } else {
+                    if (currentLetterIdx < buildLetters.length) {
+                        const l = buildLetters[currentLetterIdx];
+                        html += `<button onclick="removeLetterFromWord(${currentLetterIdx})" class="${fontSize} font-black text-blue-800 px-3 py-1 bg-white rounded-xl border-2 border-blue-200 animate-fade-in shadow-sm mx-0.5 transition-transform active:scale-95 lowercase">${l}</button>`;
+                        currentLetterIdx++;
+                    } else {
+                        // 预留未拼写的占位符
+                        html += `<div class="w-6 h-10 border-b-4 border-blue-200 mx-1"></div>`;
+                    }
+                }
+            });
+            output.innerHTML = html;
+        }
+
+        function checkWordComplete() {
+            const item = activeData[builderStep];
+            const target = item.name.replace(/\s/g, ''); 
+            if (buildLetters.length === target.length) {
+                if (buildLetters.join('') === target) {
+                    const output = document.getElementById('letterOutput');
+                    output.classList.add('success-pulse', 'bg-green-100');
+                    showFeedback("Awesome!", "bg-green-500");
+                    speak(item.name, () => { setTimeout(() => { builderStep++; if (builderStep < activeData.length) renderWordBuilder(); else showView('lesson4'); }, 1800); });
+                } else { showFeedback("Check spelling!", "bg-red-400"); speak("Try again"); }
             }
         }
 
