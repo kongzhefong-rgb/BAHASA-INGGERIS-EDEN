@@ -37,6 +37,7 @@
             flex-direction: column;
             height: 100%;
             overflow: hidden;
+            background-color: white; /* 确保不透明 */
         }
 
         /* 舞台区（展示题目和图片） */
@@ -55,7 +56,7 @@
         .game-interaction {
             flex: 0 0 auto; 
             max-height: 45%; 
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.85);
             border-top: 2px solid #f1f5f9;
             padding: 10px 12px;
             display: flex;
@@ -171,7 +172,8 @@
         </header>
 
         <main id="mainContent" class="flex-grow flex flex-col overflow-hidden relative">
-            <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center my-auto p-4">
+            <!-- 所有的 View 容器都包含在 mainContent 里 -->
+            <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center my-auto p-4 bg-white">
                 <div class="text-6xl mb-2">📚</div>
                 <h2 class="text-2xl font-bold text-gray-800 uppercase">Select Lesson</h2>
                 <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto">
@@ -182,11 +184,11 @@
                 </div>
             </div>
 
-            <div id="lesson1View" class="hidden w-full space-y-3 fade-in my-auto p-4"></div>
-            <div id="lesson2View" class="hidden w-full space-y-4 fade-in my-auto p-4"></div>
-            <div id="lesson3View" class="hidden w-full space-y-4 fade-in my-auto p-4"></div>
-            <div id="lesson4View" class="hidden w-full space-y-4 fade-in my-auto p-4"></div>
-            <div id="gameAreaView" class="hidden flex-grow flex flex-col fade-in overflow-hidden"></div>
+            <div id="lesson1View" class="hidden w-full space-y-3 fade-in my-auto p-4 bg-white"></div>
+            <div id="lesson2View" class="hidden w-full space-y-4 fade-in my-auto p-4 bg-white"></div>
+            <div id="lesson3View" class="hidden w-full space-y-4 fade-in my-auto p-4 bg-white"></div>
+            <div id="lesson4View" class="hidden w-full space-y-4 fade-in my-auto p-4 bg-white"></div>
+            <div id="gameAreaView" class="hidden flex-grow flex flex-col fade-in overflow-hidden bg-white"></div>
         </main>
     </div>
 
@@ -198,7 +200,6 @@
         let bgmAudio = document.getElementById('bgm');
         let currentLesson = 1;
 
-        // --- 数据集 ---
         const rawIntroData = {
             boy: [
                 { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
@@ -273,20 +274,19 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.08; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
-        // --- 核心修复：iPad 兼容语音引擎 ---
+        // --- 核心修复：针对 iPad 的语音引擎增强 ---
         function speak(text, callback) {
             if (!isAudioUnlocked) { if(callback) callback(); return; }
             if ('speechSynthesis' in window) {
-                // 先取消当前所有语音
+                // 立即停止，但不立即开始
                 window.speechSynthesis.cancel();
 
-                // 针对 iPad 的延迟处理：延迟 50ms 再开始，确保浏览器音频线程已清理
+                // 50ms 延迟：给 iPad 的音频驱动留出清理旧缓冲的时间
                 setTimeout(() => {
                     const msg = new SpeechSynthesisUtterance();
                     let processedText = text.replace(/\bI\b/g, 'i').replace(/______/g, 'blank');
                     msg.text = processedText;
                     
-                    // 强制指定语言和参数，增加稳定性
                     msg.lang = 'en-US'; 
                     msg.rate = 0.8; 
                     msg.pitch = 1.0; 
@@ -316,30 +316,37 @@
             showView('lesson' + n);
         }
 
+        // --- 核心修复：更鲁棒的视图切换逻辑 ---
         function showView(viewName) {
-            views.forEach(v => { 
-                const el = document.getElementById(v + 'View');
-                if (el) el.classList.add('hidden'); 
+            const main = document.getElementById('mainContent');
+            // 隐藏主区域下所有的子 div，防止 ID 遗漏导致的背后层叠
+            Array.from(main.children).forEach(child => {
+                child.classList.add('hidden');
             });
+            
             const target = document.getElementById(viewName + 'View');
-            if (target) target.classList.remove('hidden');
+            if (target) {
+                target.classList.remove('hidden');
+            }
             
             document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'lessonMenu');
             if (viewName.includes('lesson')) { playBGM(); document.getElementById('headerTitle').innerText = "Learning"; }
             else { stopBGM(); document.getElementById('headerTitle').innerText = "Playing"; }
         }
 
-        // --- 核心修复：Home 按钮点击逻辑（彻底清理） ---
+        // --- 核心修复：Home 按钮逻辑（物理清空游戏舞台） ---
         document.getElementById('homeBtn').onclick = () => { 
-            // 立即停止所有语音发音
             window.speechSynthesis.cancel(); 
-            // 强制清空游戏舞台，防止背后 layer 渲染
+            
+            // 物理清空游戏区域的 HTML 内容，彻底移除所有“背后 layer”
             const gameArea = document.getElementById('gameAreaView');
             gameArea.innerHTML = ""; 
+            
             // 重置内部状态
             matchSelected = null;
             buildLetters = [];
             buildWords = [];
+            
             showView('lessonMenu'); 
         };
 
