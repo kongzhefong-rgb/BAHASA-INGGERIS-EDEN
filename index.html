@@ -19,7 +19,24 @@
             padding: 0;
         }
 
-        /* 应用最大化模式 */
+        /* 基础容器：在电脑/手机竖屏下保持适中，横屏下自动展开 */
+        #app {
+            max-width: 100%;
+            width: 100%;
+            height: 100vh;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        @media (min-width: 768px) and (orientation: portrait) {
+            #app { max-width: 500px; box-shadow: 0 0 50px rgba(0,0,0,0.1); }
+        }
+
+        /* 应用最大化模式：完全填满屏幕 */
         #app.maximized {
             position: fixed;
             top: 0;
@@ -31,16 +48,16 @@
             border-radius: 0;
         }
 
-        /* 游戏区域布局优化 */
+        /* 游戏主区域布局 */
         #gameAreaView {
             display: flex;
             flex-direction: column;
             height: 100%;
             overflow: hidden;
-            background-color: white; /* 确保不透明 */
+            background-color: white;
         }
 
-        /* 舞台区（展示题目和图片） */
+        /* 舞台区：在横屏下自动收缩，防止挤占空间 */
         .game-stage {
             flex: 1 1 auto;
             display: flex;
@@ -50,32 +67,44 @@
             padding: 10px;
             min-height: 0; 
             overflow: hidden;
+            transition: all 0.2s ease;
         }
 
-        /* 操作区（放置按钮和选项） */
+        /* 操作互动区：在底部，确保选项始终可见 */
         .game-interaction {
             flex: 0 0 auto; 
-            max-height: 45%; 
-            background: rgba(255,255,255,0.85);
-            border-top: 2px solid #f1f5f9;
-            padding: 10px 12px;
+            max-height: 50%; /* 增加最大高度限制，防止在非常扁的屏幕上出问题 */
+            background: rgba(255,255,255,0.9);
+            border-top: 2px solid #f8fafc;
+            padding: 8px 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             overflow-y: auto;
+            z-index: 50;
+        }
+
+        /* 横屏模式下的微调 */
+        @media (orientation: landscape) {
+            .game-stage { padding: 5px; }
+            .game-stage .text-8xl { font-size: 4rem; }
+            .game-stage .text-7xl { font-size: 3.5rem; }
+            .game-stage .text-3xl { font-size: 1.5rem; }
+            header { padding: 0.5rem 1rem !important; }
         }
 
         .btn-bounce:active { transform: scale(0.92); }
 
         .option-btn {
             transition: all 0.2s;
-            box-shadow: 0 4px 0 #e5e5e5;
+            box-shadow: 0 4px 0 #e2e8f0;
             -webkit-tap-highlight-color: transparent;
+            border: 2px solid #f1f5f9;
         }
 
         .option-btn:active {
             transform: translateY(2px);
-            box-shadow: 0 1px 0 #e5e5e5;
+            box-shadow: 0 1px 0 #e2e8f0;
         }
 
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -97,17 +126,17 @@
             padding: 20px;
         }
 
-        /* 消消乐方块 */
+        /* 方块与卡片样式：横屏下高度自适应 */
         .match-tile {
-            height: clamp(50px, 9vh, 80px);
+            height: clamp(45px, 12vh, 80px);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
+            border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             box-shadow: 0 4px 0 #e2e8f0;
             border: 2px solid #e2e8f0;
             background: white;
@@ -118,21 +147,21 @@
 
         .word-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
-            padding: 8px 16px; 
-            font-weight: bold; font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+            padding: clamp(6px, 1.5vh, 12px) clamp(10px, 2vw, 20px); 
+            font-weight: bold; font-size: clamp(0.85rem, 2vh, 1.2rem);
             box-shadow: 0 3px 0 #e2e8f0; cursor: pointer;
         }
         .word-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
         
         .letter-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 10px;
-            padding: 8px; font-weight: bold; font-size: clamp(1rem, 2.8vw, 1.4rem);
-            min-width: clamp(36px, 6.5vw, 46px); text-align: center;
+            padding: clamp(5px, 1.2vh, 10px); font-weight: bold; font-size: clamp(0.9rem, 2.5vh, 1.4rem);
+            min-width: clamp(34px, 8vw, 45px); text-align: center;
             box-shadow: 0 3px 0 #e2e8f0; cursor: pointer;
         }
         .letter-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
 
-        /* My Face */
+        /* My Face 定位：使用百分比确保任何比例都不错位 */
         .face-part { position: absolute; transition: all 0.5s; opacity: 0; transform: scale(0.2); pointer-events: none; z-index: 10; display: flex; justify-content: center; align-items: center; }
         .face-part.visible { opacity: 1; transform: scale(1); }
         .hair-svg { width: 110%; top: -14%; left: -5%; z-index: 25; }
@@ -141,12 +170,12 @@
         .nose-part { top: 48%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 16; }
         .tongue-part { top: 68%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 17; } 
 
-        .memory-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
-        .card { height: clamp(80px, 15vh, 110px); position: relative; transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer; }
+        .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .card { height: clamp(70px, 18vh, 100px); position: relative; transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer; }
         .card.flipped, .card.matched { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 15px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .card-front { background-color: #ffedd5; border: 3px solid #fdba74; color: #f97316; font-size: 2.5rem; }
-        .card-back { background-color: white; border: 3px solid #fb923c; transform: rotateY(180deg); padding: 5px; text-align: center; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: bold; }
+        .card-front { background-color: #ffedd5; border: 2px solid #fdba74; color: #f97316; font-size: 2rem; }
+        .card-back { background-color: white; border: 2px solid #fb923c; transform: rotateY(180deg); padding: 4px; text-align: center; }
 
         ::-webkit-scrollbar { display: none; }
     </style>
@@ -161,22 +190,21 @@
         <div class="text-8xl mb-6">🎒</div>
         <h1 class="text-3xl font-bold text-orange-600 mb-2 uppercase">Learning App</h1>
         <p class="text-gray-500 mb-8 font-bold text-lg">Lessons 1 - 4</p>
-        <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase">Start Learning</button>
+        <button onclick="unlockAudio()" class="px-12 py-5 bg-orange-500 text-white rounded-full font-bold text-2xl shadow-xl btn-bounce uppercase tracking-wide">Start Learning</button>
     </div>
 
-    <div id="app" class="max-w-md mx-auto w-full flex-grow flex flex-col shadow-2xl bg-white h-screen relative transition-all duration-300 overflow-hidden">
-        <header class="p-4 flex items-center justify-between bg-orange-50 border-b-2 border-orange-100 shrink-0">
-            <button id="homeBtn" class="text-orange-500 font-bold p-2 hidden">🏠 Home</button>
+    <div id="app" class="relative transition-all duration-300 overflow-hidden">
+        <header class="p-4 flex items-center justify-between bg-orange-50 border-b-2 border-orange-100 shrink-0 z-50">
+            <button id="homeBtn" class="text-orange-600 font-bold p-2 hidden bg-white rounded-xl shadow-sm border border-orange-100">🏠 Home</button>
             <h1 id="headerTitle" class="text-xl font-bold text-orange-600 flex-grow text-center uppercase tracking-tight">English App</h1>
-            <button id="maxBtn" onclick="toggleMaximize()" class="text-orange-500 font-bold p-2 text-xs bg-orange-100 rounded-lg">MAX</button>
+            <button id="maxBtn" onclick="toggleMaximize()" class="text-orange-600 font-bold px-3 py-2 text-xs bg-white border border-orange-200 rounded-xl shadow-sm">MAX</button>
         </header>
 
         <main id="mainContent" class="flex-grow flex flex-col overflow-hidden relative">
-            <!-- 所有的 View 容器都包含在 mainContent 里 -->
             <div id="lessonMenuView" class="w-full space-y-4 fade-in text-center my-auto p-4 bg-white">
                 <div class="text-6xl mb-2">📚</div>
                 <h2 class="text-2xl font-bold text-gray-800 uppercase">Select Lesson</h2>
-                <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
                     <button onclick="goToLesson(1)" class="p-4 bg-yellow-100 rounded-[25px] border-b-4 border-yellow-300 btn-bounce uppercase font-bold text-yellow-800">L1</button>
                     <button onclick="goToLesson(2)" class="p-4 bg-blue-100 rounded-[25px] border-b-4 border-blue-300 btn-bounce uppercase font-bold text-blue-800">L2</button>
                     <button onclick="goToLesson(3)" class="p-4 bg-pink-100 rounded-[25px] border-b-4 border-pink-300 btn-bounce uppercase font-bold text-pink-800">L3</button>
@@ -274,30 +302,21 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.08; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
-        // --- 核心修复：针对 iPad 的语音引擎增强 ---
         function speak(text, callback) {
             if (!isAudioUnlocked) { if(callback) callback(); return; }
             if ('speechSynthesis' in window) {
-                // 立即停止，但不立即开始
                 window.speechSynthesis.cancel();
-
-                // 50ms 延迟：给 iPad 的音频驱动留出清理旧缓冲的时间
                 setTimeout(() => {
                     const msg = new SpeechSynthesisUtterance();
                     let processedText = text.replace(/\bI\b/g, 'i').replace(/______/g, 'blank');
                     msg.text = processedText;
-                    
                     msg.lang = 'en-US'; 
                     msg.rate = 0.8; 
                     msg.pitch = 1.0; 
-
                     let done = false;
-                    const finish = () => {
-                        if(!done){ done=true; if(callback) callback(); }
-                    };
+                    const finish = () => { if(!done){ done=true; if(callback) callback(); } };
                     msg.onend = finish;
                     msg.onerror = finish;
-                    
                     window.speechSynthesis.speak(msg);
                 }, 50); 
             } else if (callback) callback();
@@ -316,44 +335,31 @@
             showView('lesson' + n);
         }
 
-        // --- 核心修复：更鲁棒的视图切换逻辑 ---
         function showView(viewName) {
             const main = document.getElementById('mainContent');
-            // 隐藏主区域下所有的子 div，防止 ID 遗漏导致的背后层叠
-            Array.from(main.children).forEach(child => {
-                child.classList.add('hidden');
-            });
-            
+            Array.from(main.children).forEach(child => { child.classList.add('hidden'); });
             const target = document.getElementById(viewName + 'View');
-            if (target) {
-                target.classList.remove('hidden');
-            }
-            
+            if (target) { target.classList.remove('hidden'); }
             document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'lessonMenu');
             if (viewName.includes('lesson')) { playBGM(); document.getElementById('headerTitle').innerText = "Learning"; }
             else { stopBGM(); document.getElementById('headerTitle').innerText = "Playing"; }
         }
 
-        // --- 核心修复：Home 按钮逻辑（物理清空游戏舞台） ---
         document.getElementById('homeBtn').onclick = () => { 
             window.speechSynthesis.cancel(); 
-            
-            // 物理清空游戏区域的 HTML 内容，彻底移除所有“背后 layer”
-            const gameArea = document.getElementById('gameAreaView');
-            gameArea.innerHTML = ""; 
-            
-            // 重置内部状态
+            document.getElementById('gameAreaView').innerHTML = ""; 
             matchSelected = null;
             buildLetters = [];
             buildWords = [];
-            
             showView('lessonMenu'); 
         };
 
         function renderLessonSubmenu(n) {
             const view = document.getElementById('lesson' + n + 'View');
             let content = "";
-            const wrapper = (inner) => `<div class="grid gap-3 pt-2 max-w-sm mx-auto">${inner}</div>`;
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridCols = isLandscape ? 'grid-cols-4' : 'grid-cols-1';
+            const wrapper = (inner) => `<div class="grid ${gridCols} gap-3 pt-2 max-w-4xl mx-auto">${inner}</div>`;
             if (n === 1) content = wrapper(renderMenuBtn('intro', '👋', 'Self Intro') + renderMenuBtn('greetings', '💬', 'Greetings') + renderMenuBtn('playTime', '🧸', 'Play Time') + renderMenuBtn('quiz', '😊', 'Feelings') + renderMenuBtn('colors', '🌈', 'Colors'));
             else if (n === 2) content = wrapper(renderMenuBtn('bodyParts', '💪', 'My Body') + renderMenuBtn('myFace', '👦', 'My Face') + renderMenuBtn('bodyMatch', '🔀', 'Body Match'));
             else if (n === 3) content = wrapper(renderMenuBtn('familyMembers', '👨‍👩‍👧‍👦', 'Family') + renderMenuBtn('familyFlip', '🃏', 'Flip Game') + renderMenuBtn('familyFun', '🍲', 'Family Fun'));
@@ -362,8 +368,8 @@
         }
 
         function renderMenuBtn(game, emoji, title) {
-            return `<button onclick="startGame('${game}')" class="w-full p-4 bg-white border-2 border-gray-100 rounded-2xl flex items-center space-x-4 btn-bounce text-left shadow-sm">
-                <span class="text-3xl">${emoji}</span><div class="font-bold text-lg text-gray-700 uppercase tracking-tight">${title}</div>
+            return `<button onclick="startGame('${game}')" class="w-full p-4 bg-white border-2 border-gray-100 rounded-2xl flex items-center space-x-3 btn-bounce text-left shadow-sm">
+                <span class="text-2xl">${emoji}</span><div class="font-bold text-base text-gray-700 uppercase tracking-tight">${title}</div>
             </button>`;
         }
 
@@ -394,21 +400,21 @@
             const container = document.getElementById('gameAreaView');
             if (introState.gender === null) {
                 container.innerHTML = createLayout(
-                    `<h2 class="text-3xl font-bold text-gray-700 uppercase mb-8">Are you a boy or a girl?</h2>
+                    `<h2 class="text-2xl font-bold text-gray-700 uppercase mb-4">Boy or Girl?</h2>
                     <div class="flex justify-around items-center w-full max-w-sm">
-                        <button onclick="introState.gender='boy'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-7xl p-6 bg-blue-50 rounded-full border-4 border-blue-200">👦</div><span class="mt-2 font-bold text-blue-600 text-xl">Boy</span></button>
-                        <button onclick="introState.gender='girl'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-7xl p-6 bg-pink-50 rounded-full border-4 border-pink-200">👧</div><span class="mt-2 font-bold text-pink-600 text-xl">Girl</span></button>
+                        <button onclick="introState.gender='boy'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-6xl p-5 bg-blue-50 rounded-full border-2 border-blue-200">👦</div><span class="mt-1 font-bold text-blue-600 text-lg">Boy</span></button>
+                        <button onclick="introState.gender='girl'; renderIntro();" class="flex flex-col items-center btn-bounce"><div class="text-6xl p-5 bg-pink-50 rounded-full border-2 border-pink-200">👧</div><span class="mt-1 font-bold text-pink-600 text-lg">Girl</span></button>
                     </div>`, ""
                 );
                 speak("Are you a boy or a girl?");
             } else {
                 const data = activeData[introState.gender][introState.step];
-                const optCount = data.options.length;
-                const gridClass = optCount > 2 ? 'grid-cols-2' : 'grid-cols-1';
+                const isLandscape = window.innerWidth > window.innerHeight;
+                const gridClass = isLandscape ? 'grid-cols-3' : (data.options.length > 2 ? 'grid-cols-2' : 'grid-cols-1');
                 container.innerHTML = createLayout(
-                    `<div class="text-7xl p-5 bg-white rounded-full border-2 border-orange-50 mb-3 shrink-0">${data.img}</div>
-                    <div class="p-4 bg-orange-50 rounded-[25px] border-2 border-orange-100 max-w-sm w-full"><p class="text-xl font-bold text-center">${data.sentence}</p></div>`,
-                    `<div class="grid ${gridClass} gap-3 max-w-sm mx-auto w-full">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro(this, '${opt}')" class="option-btn p-3.5 bg-white border-2 rounded-xl font-bold uppercase text-lg w-full">${opt}</button>`).join('')}</div>`
+                    `<div class="text-7xl p-3 bg-white rounded-full border-2 border-orange-50 mb-2 shrink-0">${data.img}</div>
+                    <div class="p-3 bg-orange-50 rounded-[20px] border-2 border-orange-100 max-w-sm w-full"><p class="text-lg font-bold text-center">${data.sentence}</p></div>`,
+                    `<div class="grid ${gridClass} gap-2 max-w-2xl mx-auto w-full">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro(this, '${opt}')" class="option-btn p-3 bg-white rounded-xl font-bold uppercase text-base w-full">${opt}</button>`).join('')}</div>`
                 );
                 speak(data.correct); 
             }
@@ -424,9 +430,11 @@
 
         function renderGreetings() {
             const step = rawGreetingsData[greetingIdx];
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-2' : 'grid-cols-1';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-purple-700 uppercase text-center">${step.prompt}</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "No, thank you"]).map(o => `<button onclick="checkGreeting(this, '${o}', '${step.correct}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-2">${step.icon}</div><div class="text-2xl font-bold text-purple-700 uppercase text-center">${step.prompt}</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-md mx-auto">${shuffleArray([step.correct, "No, thank you"]).map(o => `<button onclick="checkGreeting(this, '${o}', '${step.correct}')" class="p-3 bg-white border-2 rounded-xl font-bold text-base uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak(step.prompt);
         }
@@ -440,9 +448,11 @@
 
         function renderPlayTime() {
             const step = activeData[playStep];
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-2' : 'grid-cols-1';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-green-700 uppercase text-center">${step.display}</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay(this, '${o}', '${step.correct}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-2">${step.icon}</div><div class="text-2xl font-bold text-green-700 uppercase text-center">${step.display}</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-md mx-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay(this, '${o}', '${step.correct}')" class="p-3 bg-white border-2 rounded-xl font-bold text-base uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak(step.full); 
         }
@@ -456,9 +466,11 @@
 
         function renderQuiz() {
             const q = activeData[quizIdx];
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-4' : 'grid-cols-2';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-7xl mb-4 bg-blue-50 w-32 h-32 flex items-center justify-center rounded-full shrink-0">${q.img}</div><div class="text-2xl font-bold text-blue-700 uppercase text-center">How do you feel?</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([q.correct, "Angry", "Sad", "Fine"]).map(o => `<button onclick="checkQuiz(this, '${o}', '${q.correct}')" class="p-3 bg-white border-2 rounded-2xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-2 bg-blue-50 w-28 h-28 flex items-center justify-center rounded-full shrink-0 border-2 border-blue-100">${q.img}</div><div class="text-xl font-bold text-blue-700 uppercase text-center">How do you feel?</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-2xl mx-auto">${shuffleArray([q.correct, "Angry", "Sad", "Fine"]).map(o => `<button onclick="checkQuiz(this, '${o}', '${q.correct}')" class="p-2.5 bg-white border-2 rounded-2xl font-bold text-base uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("How do you feel? I feel " + q.correct);
         }
@@ -472,9 +484,11 @@
 
         function renderColors() {
             const c = activeData[colorIdx];
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-4' : 'grid-cols-2';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="w-32 h-32 rounded-full mb-4 border-6 border-white shadow-lg shrink-0" style="background:${c.hex}"></div><div class="text-2xl font-bold text-pink-700 uppercase text-center">What color is this?</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([c.name, "Black", "White", "Grey"]).map(o => `<button onclick="checkColor(this, '${o}', '${c.name}')" class="p-3 bg-white border-2 rounded-2xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="w-28 h-28 rounded-full mb-2 border-4 border-white shadow-md shrink-0" style="background:${c.hex}"></div><div class="text-xl font-bold text-pink-700 uppercase text-center">What color is this?</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-2xl mx-auto">${shuffleArray([c.name, "Black", "White", "Grey"]).map(o => `<button onclick="checkColor(this, '${o}', '${c.name}')" class="p-2.5 bg-white border-2 rounded-2xl font-bold text-base uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("What color is this? It is " + c.name);
         }
@@ -488,9 +502,11 @@
 
         function renderBody() {
             const step = activeData[bodyStep];
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-2' : 'grid-cols-1';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4 p-6 bg-blue-50 rounded-full shrink-0">${step.icon}</div><div class="text-3xl font-bold text-blue-800 uppercase text-center">This is my...</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "hand"]).map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-2 p-5 bg-blue-50 rounded-full shrink-0 border-2 border-blue-100">${step.icon}</div><div class="text-2xl font-bold text-blue-800 uppercase text-center">This is my...</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-md mx-auto">${shuffleArray([step.correct, "hand"]).map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-3 bg-white border-2 rounded-xl font-bold text-base uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("This is my " + step.correct); 
         }
@@ -514,9 +530,11 @@
 
         function renderBodyMatch() {
             matchSelected = null;
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridCols = isLandscape ? 'grid-cols-4 sm:grid-cols-6' : 'grid-cols-3 sm:grid-cols-4';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<h2 class="text-2xl font-bold text-green-700 uppercase mb-2">Body Match!</h2>
-                <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full max-w-2xl px-2 overflow-y-auto" id="matchGrid">
+                `<h2 class="text-xl font-bold text-green-700 uppercase mb-2">Body Match!</h2>
+                <div class="grid ${gridCols} gap-2 w-full max-w-4xl px-2" id="matchGrid">
                     ${activeData.map((card, idx) => `
                         <div id="match-card-${idx}" onclick="handleMatchClick(${idx})" class="match-tile">
                             <span class="${card.type === 'icon' ? 'text-4xl' : 'text-xs font-bold text-blue-800 uppercase'}">${card.val}</span>
@@ -536,12 +554,7 @@
                 const prevIdx = matchSelected; const prevCard = activeData[prevIdx]; const prevEl = document.getElementById(`match-card-${prevIdx}`);
                 if (prevCard.pairId === card.pairId && prevCard.type !== card.type) {
                     cardEl.classList.add('selected');
-                    setTimeout(() => { 
-                        cardEl.classList.add('hidden'); 
-                        prevEl.classList.add('hidden'); 
-                        matchedCount++; 
-                        if (matchedCount === 6) { speak("Great job!", () => showView('lesson2')); } 
-                    }, 300);
+                    setTimeout(() => { cardEl.classList.add('hidden'); prevEl.classList.add('hidden'); matchedCount++; if (matchedCount === 6) { speak("Great job!", () => showView('lesson2')); } }, 300);
                 } else {
                     cardEl.classList.add('selected'); setTimeout(() => { cardEl.classList.remove('selected'); prevEl.classList.remove('selected'); }, 300);
                 }
@@ -553,10 +566,10 @@
             const totalSteps = currentFaceParts.length;
             if (faceStep >= totalSteps) {
                 document.getElementById('gameAreaView').innerHTML = createLayout(
-                    `<div class="relative w-56 h-56 bg-orange-100 rounded-full border-4 border-orange-200 mb-6 shrink-0">
-                        <div class="face-part visible ears-container">${renderEarsSvg()}</div><div class="face-part visible hair-svg">${renderHairSvg()}</div><div class="face-part visible eyes-container">${renderEyesSvg()}</div><div class="face-part visible nose-part text-5xl">👃</div><div class="face-part visible tongue-part text-5xl animate-pulse">👅</div>
-                    </div><p class="text-3xl font-bold text-orange-600 uppercase mb-4">Face Done!</p>`,
-                    `<button onclick="showView('lesson2')" class="px-10 py-4 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase w-full max-w-xs mx-auto btn-bounce">Back</button>`
+                    `<div class="relative w-48 h-48 bg-orange-100 rounded-full border-2 border-orange-200 mb-4 shrink-0">
+                        <div class="face-part visible ears-container">${renderEarsSvg()}</div><div class="face-part visible hair-svg">${renderHairSvg()}</div><div class="face-part visible eyes-container">${renderEyesSvg()}</div><div class="face-part visible nose-part text-4xl">👃</div><div class="face-part visible tongue-part text-4xl animate-pulse">👅</div>
+                    </div><p class="text-2xl font-bold text-orange-600 uppercase mb-2">Face Done!</p>`,
+                    `<button onclick="showView('lesson2')" class="px-10 py-3 bg-orange-500 text-white rounded-full font-bold shadow-md uppercase w-full max-w-xs mx-auto btn-bounce">Back</button>`
                 );
                 speak("Face Done! Excellent job!"); return;
             }
@@ -564,18 +577,18 @@
             const options = shuffleArray([current, currentFaceParts[(faceStep+1)%totalSteps], currentFaceParts[(faceStep+2)%totalSteps]]);
             const getVisibility = (partId) => currentFaceParts.findIndex(p => p.id === partId) < faceStep ? 'visible' : '';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<p class="text-4xl font-black text-orange-600 uppercase mb-3">${current.name}</p>
-                <div class="relative w-48 h-48 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center shrink-0">
-                    <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div><div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div><div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div><div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div><div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
+                `<p class="text-2xl font-black text-orange-600 uppercase mb-2">${current.name}</p>
+                <div class="relative w-40 h-40 bg-orange-100 rounded-full border-2 border-orange-200 flex items-center justify-center shrink-0">
+                    <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div><div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div><div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div><div class="face-part ${getVisibility('nose')} nose-part text-4xl">👃</div><div class="face-part ${getVisibility('tongue')} tongue-part text-4xl">👅</div>
                 </div>`,
-                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-2.5 bg-white border-2 rounded-3xl shadow-lg text-4xl btn-bounce">${opt.icon}</button>`).join('')}</div>`
+                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-2.5 bg-white border-2 rounded-2xl shadow-sm text-4xl btn-bounce">${opt.icon}</button>`).join('')}</div>`
             );
             speak(current.full); 
         }
 
         function renderHairSvg() { return `<svg viewBox="0 0 100 50" class="w-full h-full"><path d="M5,45 Q5,5 50,5 Q95,5 95,45 L95,45 Q80,35 65,45 Q50,30 35,45 Q20,35 5,45 Z" fill="#2d241e"/></svg>`; }
-        function renderEyesSvg() { return `<div class="flex w-full justify-around"><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg><svg class="w-10 h-10" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg></div>`; }
-        function renderEarsSvg() { return `<div class="flex w-full justify-between"><svg class="w-10 h-14" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg><svg class="w-10 h-14" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="5" stroke-linecap="round"/></svg></div>`; }
+        function renderEyesSvg() { return `<div class="flex w-full justify-around"><svg class="w-8 h-8" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg><svg class="w-8 h-8" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="white" stroke="#333" stroke-width="2"/><circle cx="20" cy="20" r="8" fill="#111"/></svg></div>`; }
+        function renderEarsSvg() { return `<div class="flex w-full justify-between"><svg class="w-8 h-10" viewBox="0 0 20 30"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="4" stroke-linecap="round"/></svg><svg class="w-8 h-10" viewBox="0 0 20 30" style="transform: scaleX(-1);"><path d="M20,5 Q5,5 5,15 Q5,25 20,25" fill="none" stroke="#edc9af" stroke-width="4" stroke-linecap="round"/></svg></div>`; }
 
         function checkFacePart(btn, selectedId, correctId, name) {
             if (selectedId === correctId) { btn.classList.add('bg-green-100'); speak(name.toLowerCase(), () => { faceStep++; setTimeout(renderFacePuzzle, 600); }); }
@@ -584,9 +597,11 @@
 
         function renderFamilyMembers() {
             const item = activeData[familyStep]; const other = rawFamilyData.filter(i => i.name !== item.name); const wrong = other[Math.floor(Math.random() * other.length)].name;
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-2' : 'grid-cols-1';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-7xl p-6 bg-pink-50 rounded-full border-4 border-pink-100 mb-4 shrink-0">${item.icon}</div><div class="text-2xl font-bold text-pink-700 uppercase">Who is this?</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
+                `<div class="text-7xl p-5 bg-pink-50 rounded-full border-2 border-pink-100 mb-2 shrink-0">${item.icon}</div><div class="text-xl font-bold text-pink-700 uppercase text-center">Who is this?</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-md mx-auto">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-3 bg-white border-2 rounded-xl font-bold text-base uppercase option-btn">${opt}</button>`).join('')}</div>`
             );
             speak("Who is this?"); 
         }
@@ -604,7 +619,7 @@
             pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); }); 
             flipCards = shuffleArray(cards); 
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="memory-grid max-w-sm mx-auto p-2" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-5xl' : 'text-xs font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div>`, ""
+                `<div class="memory-grid p-2" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-4xl' : 'text-xs font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div>`, ""
             );
             speak("Match the family members!");
         }
@@ -628,9 +643,9 @@
             const data = activeData[sentIdx]; buildWords = []; const shuffled = shuffleArray([...data.words]); 
             const colors = ['bg-red-50', 'bg-blue-50', 'bg-green-50', 'bg-yellow-50', 'bg-purple-50', 'bg-pink-50']; 
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-6xl p-3 bg-white rounded-2xl border-2 border-green-50 mb-2 shrink-0">${data.photo}</div>
-                <div class="p-3 bg-green-50 rounded-[20px] border-2 border-green-100 min-h-[80px] flex flex-wrap items-center justify-center gap-1.5 max-w-2xl mx-auto w-full" id="sentOutput"><span class="text-gray-300 italic text-sm">Tap words below...</span></div>`,
-                `<div class="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto w-full overflow-y-auto" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div>`
+                `<div class="text-6xl p-3 bg-white rounded-2xl border-2 border-green-50 mb-1 shrink-0">${data.photo}</div>
+                <div class="p-2.5 bg-green-50 rounded-[15px] border-2 border-green-100 min-h-[70px] flex flex-wrap items-center justify-center gap-1.5 max-w-3xl mx-auto w-full" id="sentOutput"><span class="text-gray-300 italic text-sm">Tap words...</span></div>`,
+                `<div class="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto w-full" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div>`
             );
             speak(data.full); 
         }
@@ -644,23 +659,25 @@
         }
 
         function refreshSentenceOutput() {
-            const output = document.getElementById('sentOutput'); if (buildWords.length === 0) { output.innerHTML = `<span class="text-gray-300 italic text-sm">Tap words below...</span>`; return; }
-            output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-lg font-bold text-green-800 px-3 py-1 bg-white rounded-lg border-2 border-green-200 shadow-sm m-0.5 btn-bounce">${w}</button>`).join('');
+            const output = document.getElementById('sentOutput'); if (buildWords.length === 0) { output.innerHTML = `<span class="text-gray-300 italic text-sm">Tap words...</span>`; return; }
+            output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-base font-bold text-green-800 px-3 py-1 bg-white rounded-lg border-2 border-green-200 shadow-sm m-0.5 btn-bounce">${w}</button>`).join('');
         }
 
         function checkSentenceComplete() {
             const data = activeData[sentIdx]; if (buildWords.length === data.words.length) {
                 if (buildWords.join(' ') === data.words.join(' ')) {
-                    document.getElementById('sentOutput').classList.add('bg-green-200'); speak(data.full, () => { setTimeout(() => { sentIdx++; if (sentIdx < activeData.length) renderSentences(); else showView('lesson3'); }, 1200); });
+                    document.getElementById('sentOutput').classList.add('bg-green-100'); speak(data.full, () => { setTimeout(() => { sentIdx++; if (sentIdx < activeData.length) renderSentences(); else showView('lesson3'); }, 1200); });
                 } else { showFeedback("Check order!", "bg-red-400"); }
             }
         }
 
         function renderSchoolSupplies() {
             const item = activeData[schoolStep]; const distractors = shuffleArray(rawSchoolData.filter(i => i.name !== item.name)); const options = shuffleArray([item.name, distractors[0].name]);
+            const isLandscape = window.innerWidth > window.innerHeight;
+            const gridClass = isLandscape ? 'grid-cols-2' : 'grid-cols-1';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4 p-8 bg-orange-50 rounded-full border-4 border-orange-100 shrink-0">${item.icon}</div><div class="text-3xl font-bold text-orange-700 uppercase text-center">What is this?</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-2 p-5 bg-orange-50 rounded-full border-2 border-orange-100 shrink-0">${item.icon}</div><div class="text-2xl font-bold text-orange-700 uppercase text-center">What is this?</div>`,
+                `<div class="grid ${gridClass} gap-2 w-full max-w-md mx-auto">${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-3 bg-white border-2 rounded-xl font-bold text-base uppercase option-btn">${opt}</button>`).join('')}</div>`
             );
             speak("What is this? It is a " + item.name);
         }
@@ -672,9 +689,9 @@
             const lettersPool = shuffleArray(targetWord.replace(/\s/g, '').split(''));
             const colors = ['bg-red-50', 'bg-blue-50', 'bg-green-50', 'bg-yellow-50', 'bg-purple-50', 'bg-pink-50'];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-6xl p-3 bg-white rounded-3xl shadow-sm border-2 border-blue-50 mb-2 shrink-0">${item.icon}</div>
-                <div id="letterOutput" class="p-2.5 bg-blue-50 rounded-[20px] border-2 border-blue-100 min-h-[70px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap max-w-2xl mx-auto w-full"><span class="text-gray-300 italic text-sm">Tap letters...</span></div>`,
-                `<div class="flex flex-wrap justify-center gap-1.5 max-w-2xl mx-auto w-full mt-1 overflow-y-auto" id="letterBank">${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}</div>`
+                `<div class="text-6xl p-3 bg-white rounded-2xl border-2 border-blue-50 mb-1 shrink-0">${item.icon}</div>
+                <div id="letterOutput" class="p-2.5 bg-blue-50 rounded-[15px] border-2 border-blue-100 min-h-[60px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap max-w-3xl mx-auto w-full"><span class="text-gray-300 italic text-sm">Tap letters...</span></div>`,
+                `<div class="flex flex-wrap justify-center gap-1.5 max-w-4xl mx-auto w-full mt-1" id="letterBank">${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}</div>`
             );
             speak(targetWord);
         }
@@ -690,12 +707,12 @@
         function refreshLetterOutput() {
             const output = document.getElementById('letterOutput'); const item = activeData[builderStep]; const targetWord = item.name;
             if (buildLetters.length === 0) { output.innerHTML = `<span class="text-gray-300 italic text-sm">Tap letters...</span>`; return; }
-            let fontSize = targetWord.length > 10 ? "text-lg" : (targetWord.length > 8 ? "text-xl" : "text-2xl");
+            let fontSize = targetWord.length > 10 ? "text-base" : (targetWord.length > 8 ? "text-lg" : "text-xl");
             let html = ""; let currentLetterIdx = 0; const originalChars = targetWord.split('');
             originalChars.forEach(char => {
                 if (char === ' ') html += `<div class="w-4"></div>`;
                 else if (currentLetterIdx < buildLetters.length) { html += `<button onclick="removeLetterFromWord(${currentLetterIdx})" class="${fontSize} font-black text-blue-800 px-2 py-1 bg-white rounded-lg border-2 border-blue-200 shadow-sm mx-0.5 lowercase">${buildLetters[currentLetterIdx]}</button>`; currentLetterIdx++; }
-                else html += `<div class="w-5 h-8 border-b-4 border-blue-200 mx-0.5"></div>`;
+                else html += `<div class="w-4 h-8 border-b-4 border-blue-200 mx-0.5"></div>`;
             });
             output.innerHTML = html;
         }
@@ -707,6 +724,18 @@
                 else showFeedback("Check spelling!", "bg-red-400");
             }
         }
+
+        // 监听屏幕方向变化以重新渲染子菜单
+        window.addEventListener('resize', () => {
+            if (document.getElementById('lessonMenuView').classList.contains('hidden') === false) {
+                // 如果在主菜单
+            } else {
+                for (let i = 1; i <= 4; i++) {
+                    const view = document.getElementById('lesson' + i + 'View');
+                    if (view && !view.classList.contains('hidden')) { renderLessonSubmenu(i); }
+                }
+            }
+        });
 
         showView('lessonMenu');
     </script>
