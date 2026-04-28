@@ -31,7 +31,7 @@
             border-radius: 0;
         }
 
-        /* 游戏区域布局优化：参考数学游戏架构 */
+        /* 游戏区域布局优化 */
         #gameAreaView {
             display: flex;
             flex-direction: column;
@@ -39,7 +39,7 @@
             overflow: hidden;
         }
 
-        /* 舞台区（展示题目和图片）：具备收缩性 */
+        /* 舞台区（展示题目和图片） */
         .game-stage {
             flex: 1 1 auto;
             display: flex;
@@ -47,15 +47,15 @@
             justify-content: center;
             align-items: center;
             padding: 10px;
-            min-height: 0; /* 允许 flex 项目缩小到内容以下 */
+            min-height: 0; 
             overflow: hidden;
         }
 
-        /* 操作区（放置按钮和选项）：确保不被挤出可见区域 */
+        /* 操作区（放置按钮和选项） */
         .game-interaction {
             flex: 0 0 auto; 
             max-height: 45%; 
-            background: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.7);
             border-top: 2px solid #f1f5f9;
             padding: 10px 12px;
             display: flex;
@@ -115,7 +115,6 @@
         .match-tile.selected { border-color: #fb923c; background-color: #fff7ed; transform: translateY(-2px); box-shadow: 0 6px 0 #fdba74; }
         .match-tile.hidden { opacity: 0; transform: scale(0); pointer-events: none; }
 
-        /* 单词卡片 */
         .word-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
             padding: 8px 16px; 
@@ -132,6 +131,7 @@
         }
         .letter-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
 
+        /* My Face */
         .face-part { position: absolute; transition: all 0.5s; opacity: 0; transform: scale(0.2); pointer-events: none; z-index: 10; display: flex; justify-content: center; align-items: center; }
         .face-part.visible { opacity: 1; transform: scale(1); }
         .hair-svg { width: 110%; top: -14%; left: -5%; z-index: 25; }
@@ -139,6 +139,13 @@
         .ears-container { top: 34%; width: 114%; left: -7%; display: flex; justify-content: space-between; z-index: 5; }
         .nose-part { top: 48%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 16; }
         .tongue-part { top: 68%; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 17; } 
+
+        .memory-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+        .card { height: clamp(80px, 15vh, 110px); position: relative; transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer; }
+        .card.flipped, .card.matched { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 15px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card-front { background-color: #ffedd5; border: 3px solid #fdba74; color: #f97316; font-size: 2.5rem; }
+        .card-back { background-color: white; border: 3px solid #fb923c; transform: rotateY(180deg); padding: 5px; text-align: center; }
 
         ::-webkit-scrollbar { display: none; }
     </style>
@@ -160,7 +167,7 @@
         <header class="p-4 flex items-center justify-between bg-orange-50 border-b-2 border-orange-100 shrink-0">
             <button id="homeBtn" class="text-orange-500 font-bold p-2 hidden">🏠 Home</button>
             <h1 id="headerTitle" class="text-xl font-bold text-orange-600 flex-grow text-center uppercase tracking-tight">English App</h1>
-            <button id="maxBtn" onclick="toggleMaximize()" class="text-orange-500 font-bold p-2 text-sm bg-orange-100 rounded-lg">MAX</button>
+            <button id="maxBtn" onclick="toggleMaximize()" class="text-orange-500 font-bold p-2 text-xs bg-orange-100 rounded-lg">MAX</button>
         </header>
 
         <main id="mainContent" class="flex-grow flex flex-col overflow-hidden relative">
@@ -191,6 +198,7 @@
         let bgmAudio = document.getElementById('bgm');
         let currentLesson = 1;
 
+        // --- 数据集 ---
         const rawIntroData = {
             boy: [
                 { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
@@ -265,20 +273,33 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.08; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
+        // --- 核心修复：iPad 兼容语音引擎 ---
         function speak(text, callback) {
             if (!isAudioUnlocked) { if(callback) callback(); return; }
             if ('speechSynthesis' in window) {
+                // 先取消当前所有语音
                 window.speechSynthesis.cancel();
-                const msg = new SpeechSynthesisUtterance();
-                let processedText = text.replace(/\bI\b/g, 'i').replace(/______/g, 'blank');
-                msg.text = processedText;
-                msg.lang = 'en-US'; 
-                msg.rate = 0.8; 
-                msg.pitch = 1.05; 
-                let done = false;
-                msg.onend = () => { if(!done){ done=true; if(callback) callback(); }};
-                msg.onerror = () => { if(!done){ done=true; if(callback) callback(); }};
-                window.speechSynthesis.speak(msg);
+
+                // 针对 iPad 的延迟处理：延迟 50ms 再开始，确保浏览器音频线程已清理
+                setTimeout(() => {
+                    const msg = new SpeechSynthesisUtterance();
+                    let processedText = text.replace(/\bI\b/g, 'i').replace(/______/g, 'blank');
+                    msg.text = processedText;
+                    
+                    // 强制指定语言和参数，增加稳定性
+                    msg.lang = 'en-US'; 
+                    msg.rate = 0.8; 
+                    msg.pitch = 1.0; 
+
+                    let done = false;
+                    const finish = () => {
+                        if(!done){ done=true; if(callback) callback(); }
+                    };
+                    msg.onend = finish;
+                    msg.onerror = finish;
+                    
+                    window.speechSynthesis.speak(msg);
+                }, 50); 
             } else if (callback) callback();
         }
 
@@ -296,14 +317,31 @@
         }
 
         function showView(viewName) {
-            views.forEach(v => { document.getElementById(v + 'View').classList.add('hidden'); });
-            document.getElementById(viewName + 'View').classList.remove('hidden');
+            views.forEach(v => { 
+                const el = document.getElementById(v + 'View');
+                if (el) el.classList.add('hidden'); 
+            });
+            const target = document.getElementById(viewName + 'View');
+            if (target) target.classList.remove('hidden');
+            
             document.getElementById('homeBtn').classList.toggle('hidden', viewName === 'lessonMenu');
             if (viewName.includes('lesson')) { playBGM(); document.getElementById('headerTitle').innerText = "Learning"; }
             else { stopBGM(); document.getElementById('headerTitle').innerText = "Playing"; }
         }
 
-        document.getElementById('homeBtn').onclick = () => { window.speechSynthesis.cancel(); showView('lessonMenu'); };
+        // --- 核心修复：Home 按钮点击逻辑（彻底清理） ---
+        document.getElementById('homeBtn').onclick = () => { 
+            // 立即停止所有语音发音
+            window.speechSynthesis.cancel(); 
+            // 强制清空游戏舞台，防止背后 layer 渲染
+            const gameArea = document.getElementById('gameAreaView');
+            gameArea.innerHTML = ""; 
+            // 重置内部状态
+            matchSelected = null;
+            buildLetters = [];
+            buildWords = [];
+            showView('lessonMenu'); 
+        };
 
         function renderLessonSubmenu(n) {
             const view = document.getElementById('lesson' + n + 'View');
@@ -471,7 +509,7 @@
             matchSelected = null;
             document.getElementById('gameAreaView').innerHTML = createLayout(
                 `<h2 class="text-2xl font-bold text-green-700 uppercase mb-2">Body Match!</h2>
-                <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full max-w-2xl px-2" id="matchGrid">
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full max-w-2xl px-2 overflow-y-auto" id="matchGrid">
                     ${activeData.map((card, idx) => `
                         <div id="match-card-${idx}" onclick="handleMatchClick(${idx})" class="match-tile">
                             <span class="${card.type === 'icon' ? 'text-4xl' : 'text-xs font-bold text-blue-800 uppercase'}">${card.val}</span>
@@ -491,7 +529,12 @@
                 const prevIdx = matchSelected; const prevCard = activeData[prevIdx]; const prevEl = document.getElementById(`match-card-${prevIdx}`);
                 if (prevCard.pairId === card.pairId && prevCard.type !== card.type) {
                     cardEl.classList.add('selected');
-                    setTimeout(() => { cardEl.classList.add('hidden'); prevEl.classList.add('hidden'); matchedCount++; if (matchedCount === 6) { speak("Great job!", () => showView('lesson2')); } }, 300);
+                    setTimeout(() => { 
+                        cardEl.classList.add('hidden'); 
+                        prevEl.classList.add('hidden'); 
+                        matchedCount++; 
+                        if (matchedCount === 6) { speak("Great job!", () => showView('lesson2')); } 
+                    }, 300);
                 } else {
                     cardEl.classList.add('selected'); setTimeout(() => { cardEl.classList.remove('selected'); prevEl.classList.remove('selected'); }, 300);
                 }
@@ -506,7 +549,7 @@
                     `<div class="relative w-56 h-56 bg-orange-100 rounded-full border-4 border-orange-200 mb-6 shrink-0">
                         <div class="face-part visible ears-container">${renderEarsSvg()}</div><div class="face-part visible hair-svg">${renderHairSvg()}</div><div class="face-part visible eyes-container">${renderEyesSvg()}</div><div class="face-part visible nose-part text-5xl">👃</div><div class="face-part visible tongue-part text-5xl animate-pulse">👅</div>
                     </div><p class="text-3xl font-bold text-orange-600 uppercase mb-4">Face Done!</p>`,
-                    `<button onclick="showView('lesson2')" class="px-10 py-4 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase w-full max-w-xs mx-auto">Back</button>`
+                    `<button onclick="showView('lesson2')" class="px-10 py-4 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase w-full max-w-xs mx-auto btn-bounce">Back</button>`
                 );
                 speak("Face Done! Excellent job!"); return;
             }
@@ -518,7 +561,7 @@
                 <div class="relative w-48 h-48 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center shrink-0">
                     <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div><div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div><div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div><div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div><div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
                 </div>`,
-                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-2.5 bg-white border-2 rounded-3xl shadow-lg text-4xl">${opt.icon}</button>`).join('')}</div>`
+                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-2.5 bg-white border-2 rounded-3xl shadow-lg text-4xl btn-bounce">${opt.icon}</button>`).join('')}</div>`
             );
             speak(current.full); 
         }
@@ -543,14 +586,36 @@
 
         function checkFamilyMember(btn, opt, correct) { if (opt.toLowerCase() === correct.toLowerCase()) { btn.classList.add('bg-green-500', 'text-white'); speak(correct, () => { familyStep++; if (familyStep < activeData.length) renderFamilyMembers(); else showView('lesson3'); }); } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); } }
 
-        function renderFlipGame() { matchedCount = 0; flippedIndices = []; const itemsPerPage = 3; const start = memoryPageIdx * itemsPerPage; let pageItems = rawFamilyData.slice(start, start + itemsPerPage); if (pageItems.length > 0 && pageItems.length < itemsPerPage) { const pool = rawFamilyData.filter(item => !pageItems.includes(item)); pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)]; } const cards = []; pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); }); flipCards = shuffleArray(cards); 
+        function renderFlipGame() { 
+            matchedCount = 0; flippedIndices = []; const itemsPerPage = 3; const start = memoryPageIdx * itemsPerPage; 
+            let pageItems = rawFamilyData.slice(start, start + itemsPerPage); 
+            if (pageItems.length > 0 && pageItems.length < itemsPerPage) { 
+                const pool = rawFamilyData.filter(item => !pageItems.includes(item)); 
+                pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)]; 
+            } 
+            const cards = []; 
+            pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); }); 
+            flipCards = shuffleArray(cards); 
             document.getElementById('gameAreaView').innerHTML = createLayout(
                 `<div class="memory-grid max-w-sm mx-auto p-2" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-5xl' : 'text-xs font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div>`, ""
             );
             speak("Match the family members!");
         }
 
-        function handleFlip(idx) { const cardEl = document.getElementById(`card-${idx}`); if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return; cardEl.classList.add('flipped'); flippedIndices.push(idx); speak(flipCards[idx].name); if (flippedIndices.length === 2) { const [i1, i2] = flippedIndices; if (flipCards[i1].name === flipCards[i2].name) { setTimeout(() => { document.getElementById(`card-${i1}`).classList.add('matched'); document.getElementById(`card-${i2}`).classList.add('matched'); matchedCount++; flippedIndices = []; if (matchedCount === 3) { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); } }, 400); } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 800); } } }
+        function handleFlip(idx) { 
+            const cardEl = document.getElementById(`card-${idx}`); if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return; 
+            cardEl.classList.add('flipped'); flippedIndices.push(idx); speak(flipCards[idx].name); 
+            if (flippedIndices.length === 2) { 
+                const [i1, i2] = flippedIndices; 
+                if (flipCards[i1].name === flipCards[i2].name) { 
+                    setTimeout(() => { 
+                        document.getElementById(`card-${i1}`).classList.add('matched'); document.getElementById(`card-${i2}`).classList.add('matched'); 
+                        matchedCount++; flippedIndices = []; 
+                        if (matchedCount === 3) { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); } 
+                    }, 400); 
+                } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 800); } 
+            } 
+        }
 
         function renderSentences() { 
             const data = activeData[sentIdx]; buildWords = []; const shuffled = shuffleArray([...data.words]); 
@@ -558,7 +623,7 @@
             document.getElementById('gameAreaView').innerHTML = createLayout(
                 `<div class="text-6xl p-3 bg-white rounded-2xl border-2 border-green-50 mb-2 shrink-0">${data.photo}</div>
                 <div class="p-3 bg-green-50 rounded-[20px] border-2 border-green-100 min-h-[80px] flex flex-wrap items-center justify-center gap-1.5 max-w-2xl mx-auto w-full" id="sentOutput"><span class="text-gray-300 italic text-sm">Tap words below...</span></div>`,
-                `<div class="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto w-full" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div>`
+                `<div class="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto w-full overflow-y-auto" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div>`
             );
             speak(data.full); 
         }
@@ -602,7 +667,7 @@
             document.getElementById('gameAreaView').innerHTML = createLayout(
                 `<div class="text-6xl p-3 bg-white rounded-3xl shadow-sm border-2 border-blue-50 mb-2 shrink-0">${item.icon}</div>
                 <div id="letterOutput" class="p-2.5 bg-blue-50 rounded-[20px] border-2 border-blue-100 min-h-[70px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap max-w-2xl mx-auto w-full"><span class="text-gray-300 italic text-sm">Tap letters...</span></div>`,
-                `<div class="flex flex-wrap justify-center gap-1.5 max-w-2xl mx-auto w-full mt-1" id="letterBank">${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}</div>`
+                `<div class="flex flex-wrap justify-center gap-1.5 max-w-2xl mx-auto w-full mt-1 overflow-y-auto" id="letterBank">${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}</div>`
             );
             speak(targetWord);
         }
