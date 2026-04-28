@@ -12,7 +12,7 @@
             font-family: 'Quicksand', sans-serif;
             background-color: #fffaf5;
             user-select: none;
-            overflow: hidden; /* 整体禁止滚动，由内部容器控制 */
+            overflow: hidden; 
             touch-action: manipulation;
             color: #4a4a4a;
             margin: 0;
@@ -36,28 +36,31 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            overflow: hidden;
         }
 
-        /* 舞台区（展示题目和图片） */
+        /* 舞台区（展示题目和图片）：具备收缩性 */
         .game-stage {
-            flex: 1; /* 占用 70% 左右的空间 */
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 10px;
+            min-height: 0; /* 允许 flex 项目缩小到内容以下 */
             overflow: hidden;
         }
 
-        /* 操作区（放置按钮和选项） */
+        /* 操作区（放置按钮和选项）：确保不被挤出可见区域 */
         .game-interaction {
-            height: 32%; /* 约占 30% */
-            background: rgba(255,255,255,0.5);
+            flex: 0 0 auto; 
+            max-height: 45%; 
+            background: rgba(255,255,255,0.6);
             border-top: 2px solid #f1f5f9;
-            padding: 12px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             overflow-y: auto;
         }
 
@@ -95,7 +98,7 @@
 
         /* 消消乐方块 */
         .match-tile {
-            height: clamp(55px, 10vh, 85px);
+            height: clamp(50px, 9vh, 80px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -107,7 +110,7 @@
             box-shadow: 0 4px 0 #e2e8f0;
             border: 2px solid #e2e8f0;
             background: white;
-            padding: 5px;
+            padding: 4px;
         }
         .match-tile.selected { border-color: #fb923c; background-color: #fff7ed; transform: translateY(-2px); box-shadow: 0 6px 0 #fdba74; }
         .match-tile.hidden { opacity: 0; transform: scale(0); pointer-events: none; }
@@ -115,17 +118,17 @@
         /* 单词卡片 */
         .word-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 12px;
-            padding: 10px 18px; 
-            font-weight: bold; font-size: clamp(0.9rem, 2.2vw, 1.3rem);
-            box-shadow: 0 4px 0 #e2e8f0; cursor: pointer;
+            padding: 8px 16px; 
+            font-weight: bold; font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+            box-shadow: 0 3px 0 #e2e8f0; cursor: pointer;
         }
         .word-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
         
         .letter-chip {
             background: white; border: 2px solid #e2e8f0; border-radius: 10px;
-            padding: 10px; font-weight: bold; font-size: clamp(1.1rem, 3vw, 1.5rem);
-            min-width: clamp(38px, 7vw, 48px); text-align: center;
-            box-shadow: 0 4px 0 #e2e8f0; cursor: pointer;
+            padding: 8px; font-weight: bold; font-size: clamp(1rem, 2.8vw, 1.4rem);
+            min-width: clamp(36px, 6.5vw, 46px); text-align: center;
+            box-shadow: 0 3px 0 #e2e8f0; cursor: pointer;
         }
         .letter-chip.used { opacity: 0.1; pointer-events: none; transform: scale(0.9); }
 
@@ -188,7 +191,6 @@
         let bgmAudio = document.getElementById('bgm');
         let currentLesson = 1;
 
-        // --- 数据集保持不变 ---
         const rawIntroData = {
             boy: [
                 { img: '👦', sentence: "My name is <span class='highlight-text'>______</span>.", options: ['Effie', 'Eden', 'Janice'], correct: 'Eden' },
@@ -263,16 +265,14 @@
         function playBGM() { if (isAudioUnlocked) { bgmAudio.volume = 0.08; bgmAudio.play().catch(e => {}); } }
         function stopBGM() { bgmAudio.pause(); }
 
-        // --- 优化后的语音引擎：支持标点停顿与连贯性 ---
         function speak(text, callback) {
             if (!isAudioUnlocked) { if(callback) callback(); return; }
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const msg = new SpeechSynthesisUtterance();
-                // 优化处理：针对低幼教学，某些特殊词汇发音纠正
                 let processedText = text.replace(/\bI\b/g, 'i').replace(/______/g, 'blank');
                 msg.text = processedText;
-                msg.lang = 'en-US'; // 切换到美式英语通常发音更具教学感
+                msg.lang = 'en-US'; 
                 msg.rate = 0.8; 
                 msg.pitch = 1.05; 
                 let done = false;
@@ -341,7 +341,6 @@
             else if (game === 'wordBuilder') { builderStep = 0; activeData = shuffleArray(rawSchoolData); renderWordBuilder(); }
         }
 
-        // --- 经典布局渲染器 ---
         function createLayout(stageHTML, interactionHTML) {
             return `<div class="game-stage">${stageHTML}</div><div class="game-interaction">${interactionHTML}</div>`;
         }
@@ -359,14 +358,17 @@
                 speak("Are you a boy or a girl?");
             } else {
                 const data = activeData[introState.gender][introState.step];
+                const optCount = data.options.length;
+                const gridClass = optCount > 2 ? 'grid-cols-2' : 'grid-cols-1';
                 container.innerHTML = createLayout(
-                    `<div class="text-8xl p-6 bg-white rounded-full border-2 border-orange-50 mb-4">${data.img}</div>
-                    <div class="p-5 bg-orange-50 rounded-[30px] border-2 border-orange-100 max-w-sm w-full"><p class="text-2xl font-bold">${data.sentence}</p></div>`,
-                    `<div class="grid gap-2">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro(this, '${opt}')" class="option-btn p-4 bg-white border-2 rounded-xl font-bold uppercase text-lg w-full">${opt}</button>`).join('')}</div>`
+                    `<div class="text-7xl p-5 bg-white rounded-full border-2 border-orange-50 mb-3 shrink-0">${data.img}</div>
+                    <div class="p-4 bg-orange-50 rounded-[25px] border-2 border-orange-100 max-w-sm w-full"><p class="text-xl font-bold text-center">${data.sentence}</p></div>`,
+                    `<div class="grid ${gridClass} gap-3 max-w-sm mx-auto w-full">${shuffleArray(data.options).map(opt => `<button onclick="checkIntro(this, '${opt}')" class="option-btn p-3.5 bg-white border-2 rounded-xl font-bold uppercase text-lg w-full">${opt}</button>`).join('')}</div>`
                 );
                 speak(data.correct); 
             }
         }
+
         function checkIntro(btn, opt) {
             const data = activeData[introState.gender][introState.step];
             if (opt.toLowerCase() === data.correct.toLowerCase()) {
@@ -378,11 +380,12 @@
         function renderGreetings() {
             const step = rawGreetingsData[greetingIdx];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-9xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-purple-700 uppercase">${step.prompt}</div>`,
-                `<div class="grid gap-2 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "No, thank you"]).map(o => `<button onclick="checkGreeting(this, '${o}', '${step.correct}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-8xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-purple-700 uppercase text-center">${step.prompt}</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "No, thank you"]).map(o => `<button onclick="checkGreeting(this, '${o}', '${step.correct}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak(step.prompt);
         }
+
         function checkGreeting(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
@@ -393,11 +396,12 @@
         function renderPlayTime() {
             const step = activeData[playStep];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-9xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-green-700 uppercase">${step.display}</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay(this, '${o}', '${step.correct}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-8xl mb-4">${step.icon}</div><div class="text-3xl font-bold text-green-700 uppercase text-center">${step.display}</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "ball"]).map(o => `<button onclick="checkPlay(this, '${o}', '${step.correct}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak(step.full); 
         }
+
         function checkPlay(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
@@ -408,11 +412,12 @@
         function renderQuiz() {
             const q = activeData[quizIdx];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4 bg-blue-50 w-40 h-40 flex items-center justify-center rounded-full">${q.img}</div><div class="text-3xl font-bold text-blue-700 uppercase">How do you feel?</div>`,
-                `<div class="grid gap-2 w-full max-w-sm mx-auto">${shuffleArray([q.correct, "Angry"]).map(o => `<button onclick="checkQuiz(this, '${o}', '${q.correct}')" class="p-4 bg-white border-2 rounded-3xl font-bold text-xl uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="text-7xl mb-4 bg-blue-50 w-32 h-32 flex items-center justify-center rounded-full shrink-0">${q.img}</div><div class="text-2xl font-bold text-blue-700 uppercase text-center">How do you feel?</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([q.correct, "Angry", "Sad", "Fine"]).map(o => `<button onclick="checkQuiz(this, '${o}', '${q.correct}')" class="p-3 bg-white border-2 rounded-2xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("How do you feel? I feel " + q.correct);
         }
+
         function checkQuiz(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
@@ -423,11 +428,12 @@
         function renderColors() {
             const c = activeData[colorIdx];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="w-40 h-40 rounded-full mb-4 border-8 border-white shadow-lg" style="background:${c.hex}"></div><div class="text-3xl font-bold text-pink-700 uppercase">What color is this?</div>`,
-                `<div class="grid gap-2 w-full max-w-sm mx-auto">${shuffleArray([c.name, "Black"]).map(o => `<button onclick="checkColor(this, '${o}', '${c.name}')" class="p-4 bg-white border-2 rounded-3xl font-bold text-xl uppercase option-btn">${o}</button>`).join('')}</div>`
+                `<div class="w-32 h-32 rounded-full mb-4 border-6 border-white shadow-lg shrink-0" style="background:${c.hex}"></div><div class="text-2xl font-bold text-pink-700 uppercase text-center">What color is this?</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([c.name, "Black", "White", "Grey"]).map(o => `<button onclick="checkColor(this, '${o}', '${c.name}')" class="p-3 bg-white border-2 rounded-2xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("What color is this? It is " + c.name);
         }
+
         function checkColor(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
@@ -438,16 +444,27 @@
         function renderBody() {
             const step = activeData[bodyStep];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-9xl mb-4 p-8 bg-blue-50 rounded-full">${step.icon}</div><div class="text-3xl font-bold text-blue-800 uppercase">This is my...</div>`,
+                `<div class="text-8xl mb-4 p-6 bg-blue-50 rounded-full shrink-0">${step.icon}</div><div class="text-3xl font-bold text-blue-800 uppercase text-center">This is my...</div>`,
                 `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([step.correct, "hand"]).map(o => `<button onclick="checkBody(this, '${o}', '${step.correct}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${o}</button>`).join('')}</div>`
             );
             speak("This is my " + step.correct); 
         }
+
         function checkBody(btn, opt, correct) {
             if (opt.toLowerCase() === correct.toLowerCase()) {
                 btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
                 speak(correct, () => { bodyStep++; if (bodyStep < activeData.length) renderBody(); else showView('lesson2'); });
             } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); }
+        }
+
+        function prepareMatchData(data) {
+            const selection = shuffleArray(data).slice(0, 6);
+            const cards = [];
+            selection.forEach(item => {
+                cards.push({ type: 'icon', val: item.icon, pairId: item.correct, id: Math.random() });
+                cards.push({ type: 'text', val: item.correct, pairId: item.correct, id: Math.random() });
+            });
+            return shuffleArray(cards);
         }
 
         function renderBodyMatch() {
@@ -486,7 +503,7 @@
             const totalSteps = currentFaceParts.length;
             if (faceStep >= totalSteps) {
                 document.getElementById('gameAreaView').innerHTML = createLayout(
-                    `<div class="relative w-64 h-64 bg-orange-100 rounded-full border-4 border-orange-200 mb-6">
+                    `<div class="relative w-56 h-56 bg-orange-100 rounded-full border-4 border-orange-200 mb-6 shrink-0">
                         <div class="face-part visible ears-container">${renderEarsSvg()}</div><div class="face-part visible hair-svg">${renderHairSvg()}</div><div class="face-part visible eyes-container">${renderEyesSvg()}</div><div class="face-part visible nose-part text-5xl">👃</div><div class="face-part visible tongue-part text-5xl animate-pulse">👅</div>
                     </div><p class="text-3xl font-bold text-orange-600 uppercase mb-4">Face Done!</p>`,
                     `<button onclick="showView('lesson2')" class="px-10 py-4 bg-orange-500 text-white rounded-full font-bold shadow-xl uppercase w-full max-w-xs mx-auto">Back</button>`
@@ -497,11 +514,11 @@
             const options = shuffleArray([current, currentFaceParts[(faceStep+1)%totalSteps], currentFaceParts[(faceStep+2)%totalSteps]]);
             const getVisibility = (partId) => currentFaceParts.findIndex(p => p.id === partId) < faceStep ? 'visible' : '';
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<p class="text-4xl font-black text-orange-600 uppercase mb-4">${current.name}</p>
-                <div class="relative w-56 h-56 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center">
+                `<p class="text-4xl font-black text-orange-600 uppercase mb-3">${current.name}</p>
+                <div class="relative w-48 h-48 bg-orange-100 rounded-full border-4 border-orange-200 flex items-center justify-center shrink-0">
                     <div class="face-part ${getVisibility('ears')} ears-container">${renderEarsSvg()}</div><div class="face-part ${getVisibility('hair')} hair-svg">${renderHairSvg()}</div><div class="face-part ${getVisibility('eyes')} eyes-container">${renderEyesSvg()}</div><div class="face-part ${getVisibility('nose')} nose-part text-5xl">👃</div><div class="face-part ${getVisibility('tongue')} tongue-part text-5xl">👅</div>
                 </div>`,
-                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-3 bg-white border-2 rounded-3xl shadow-lg text-5xl">${opt.icon}</button>`).join('')}</div>`
+                `<div class="flex justify-around items-center gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkFacePart(this, '${opt.id}', '${current.id}', '${current.name}')" class="p-2.5 bg-white border-2 rounded-3xl shadow-lg text-4xl">${opt.icon}</button>`).join('')}</div>`
             );
             speak(current.full); 
         }
@@ -518,31 +535,34 @@
         function renderFamilyMembers() {
             const item = activeData[familyStep]; const other = rawFamilyData.filter(i => i.name !== item.name); const wrong = other[Math.floor(Math.random() * other.length)].name;
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl p-8 bg-pink-50 rounded-full border-4 border-pink-100 mb-4">${item.icon}</div><div class="text-2xl font-bold text-pink-700 uppercase">Who is this?</div>`,
-                `<div class="grid gap-2 w-full max-w-sm mx-auto">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
+                `<div class="text-7xl p-6 bg-pink-50 rounded-full border-4 border-pink-100 mb-4 shrink-0">${item.icon}</div><div class="text-2xl font-bold text-pink-700 uppercase">Who is this?</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${shuffleArray([item.name, wrong]).map(opt => `<button onclick="checkFamilyMember(this, '${opt}', '${item.name}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
             );
             speak("Who is this?"); 
         }
+
         function checkFamilyMember(btn, opt, correct) { if (opt.toLowerCase() === correct.toLowerCase()) { btn.classList.add('bg-green-500', 'text-white'); speak(correct, () => { familyStep++; if (familyStep < activeData.length) renderFamilyMembers(); else showView('lesson3'); }); } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); } }
 
         function renderFlipGame() { matchedCount = 0; flippedIndices = []; const itemsPerPage = 3; const start = memoryPageIdx * itemsPerPage; let pageItems = rawFamilyData.slice(start, start + itemsPerPage); if (pageItems.length > 0 && pageItems.length < itemsPerPage) { const pool = rawFamilyData.filter(item => !pageItems.includes(item)); pageItems = [...pageItems, ...shuffleArray(pool).slice(0, itemsPerPage - pageItems.length)]; } const cards = []; pageItems.forEach(item => { cards.push({ type: 'icon', val: item.icon, name: item.name }, { type: 'name', val: item.name, name: item.name }); }); flipCards = shuffleArray(cards); 
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="memory-grid max-w-sm mx-auto" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-5xl' : 'text-sm font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div>`, ""
+                `<div class="memory-grid max-w-sm mx-auto p-2" id="memoryGrid">${flipCards.map((card, i) => `<div class="card" id="card-${i}" onclick="handleFlip(${i})"><div class="card-face card-front">❓</div><div class="card-face card-back"><div class="${card.type === 'icon' ? 'text-5xl' : 'text-xs font-bold text-orange-800 uppercase'}">${card.val}</div></div></div>`).join('')}</div>`, ""
             );
             speak("Match the family members!");
         }
+
         function handleFlip(idx) { const cardEl = document.getElementById(`card-${idx}`); if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedIndices.length === 2) return; cardEl.classList.add('flipped'); flippedIndices.push(idx); speak(flipCards[idx].name); if (flippedIndices.length === 2) { const [i1, i2] = flippedIndices; if (flipCards[i1].name === flipCards[i2].name) { setTimeout(() => { document.getElementById(`card-${i1}`).classList.add('matched'); document.getElementById(`card-${i2}`).classList.add('matched'); matchedCount++; flippedIndices = []; if (matchedCount === 3) { memoryPageIdx++; if (memoryPageIdx < 3) renderFlipGame(); else showView('lesson3'); } }, 400); } else { setTimeout(() => { document.getElementById(`card-${i1}`).classList.remove('flipped'); document.getElementById(`card-${i2}`).classList.remove('flipped'); flippedIndices = []; }, 800); } } }
 
         function renderSentences() { 
             const data = activeData[sentIdx]; buildWords = []; const shuffled = shuffleArray([...data.words]); 
             const colors = ['bg-red-50', 'bg-blue-50', 'bg-green-50', 'bg-yellow-50', 'bg-purple-50', 'bg-pink-50']; 
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-7xl p-3 bg-white rounded-2xl border-2 border-green-50 mb-3">${data.photo}</div>
-                <div class="p-4 bg-green-50 rounded-[20px] border-2 border-green-100 min-h-[100px] flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto w-full" id="sentOutput"><span class="text-gray-300 italic text-sm">Tap words below...</span></div>`,
+                `<div class="text-6xl p-3 bg-white rounded-2xl border-2 border-green-50 mb-2 shrink-0">${data.photo}</div>
+                <div class="p-3 bg-green-50 rounded-[20px] border-2 border-green-100 min-h-[80px] flex flex-wrap items-center justify-center gap-1.5 max-w-2xl mx-auto w-full" id="sentOutput"><span class="text-gray-300 italic text-sm">Tap words below...</span></div>`,
                 `<div class="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto w-full" id="wordBank">${shuffled.map((w, i) => `<button onclick="addWordToSent(this, '${w.replace(/'/g, "\\'")}')" class="word-chip ${colors[i % colors.length]}">${w}</button>`).join('')}</div>`
             );
             speak(data.full); 
         }
+
         function addWordToSent(btn, word) { btn.classList.add('used'); buildWords.push(word); refreshSentenceOutput(); speak(word); checkSentenceComplete(); }
         function removeWordFromSent(wordIdx) {
             const wordToRemove = buildWords[wordIdx]; buildWords.splice(wordIdx, 1);
@@ -550,10 +570,12 @@
             for (let btn of bankButtons) { if (btn.innerText === wordToRemove && btn.classList.contains('used')) { btn.classList.remove('used'); break; } }
             refreshSentenceOutput(); 
         }
+
         function refreshSentenceOutput() {
             const output = document.getElementById('sentOutput'); if (buildWords.length === 0) { output.innerHTML = `<span class="text-gray-300 italic text-sm">Tap words below...</span>`; return; }
             output.innerHTML = buildWords.map((w, idx) => `<button onclick="removeWordFromSent(${idx})" class="text-lg font-bold text-green-800 px-3 py-1 bg-white rounded-lg border-2 border-green-200 shadow-sm m-0.5 btn-bounce">${w}</button>`).join('');
         }
+
         function checkSentenceComplete() {
             const data = activeData[sentIdx]; if (buildWords.length === data.words.length) {
                 if (buildWords.join(' ') === data.words.join(' ')) {
@@ -565,11 +587,12 @@
         function renderSchoolSupplies() {
             const item = activeData[schoolStep]; const distractors = shuffleArray(rawSchoolData.filter(i => i.name !== item.name)); const options = shuffleArray([item.name, distractors[0].name]);
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-8xl mb-4 p-8 bg-orange-50 rounded-full border-4 border-orange-100">${item.icon}</div><div class="text-3xl font-bold text-orange-700 uppercase">What is this?</div>`,
-                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-4 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
+                `<div class="text-8xl mb-4 p-8 bg-orange-50 rounded-full border-4 border-orange-100 shrink-0">${item.icon}</div><div class="text-3xl font-bold text-orange-700 uppercase text-center">What is this?</div>`,
+                `<div class="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">${options.map(opt => `<button onclick="checkSchoolItem(this, '${opt}', '${item.name}')" class="p-3.5 bg-white border-2 rounded-xl font-bold text-lg uppercase option-btn">${opt}</button>`).join('')}</div>`
             );
             speak("What is this? It is a " + item.name);
         }
+
         function checkSchoolItem(btn, opt, correct) { if (opt.toLowerCase() === correct.toLowerCase()) { btn.classList.add('bg-green-500', 'text-white'); speak(correct, () => { schoolStep++; if (schoolStep < activeData.length) renderSchoolSupplies(); else showView('lesson4'); }); } else { showFeedback("Try again!", "bg-red-400"); speak("Try again"); } }
 
         function renderWordBuilder() {
@@ -577,8 +600,8 @@
             const lettersPool = shuffleArray(targetWord.replace(/\s/g, '').split(''));
             const colors = ['bg-red-50', 'bg-blue-50', 'bg-green-50', 'bg-yellow-50', 'bg-purple-50', 'bg-pink-50'];
             document.getElementById('gameAreaView').innerHTML = createLayout(
-                `<div class="text-7xl p-3 bg-white rounded-3xl shadow-sm border-2 border-blue-50 mb-3">${item.icon}</div>
-                <div id="letterOutput" class="p-3 bg-blue-50 rounded-[20px] border-2 border-blue-100 min-h-[80px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap max-w-2xl mx-auto w-full"><span class="text-gray-300 italic text-sm">Tap letters...</span></div>`,
+                `<div class="text-6xl p-3 bg-white rounded-3xl shadow-sm border-2 border-blue-50 mb-2 shrink-0">${item.icon}</div>
+                <div id="letterOutput" class="p-2.5 bg-blue-50 rounded-[20px] border-2 border-blue-100 min-h-[70px] flex flex-nowrap items-center justify-center overflow-x-hidden whitespace-nowrap max-w-2xl mx-auto w-full"><span class="text-gray-300 italic text-sm">Tap letters...</span></div>`,
                 `<div class="flex flex-wrap justify-center gap-1.5 max-w-2xl mx-auto w-full mt-1" id="letterBank">${lettersPool.map((l, i) => `<button onclick="addLetterToWord(this, '${l}')" class="letter-chip ${colors[i % colors.length]}">${l}</button>`).join('')}</div>`
             );
             speak(targetWord);
@@ -591,6 +614,7 @@
             for (let btn of bankButtons) { if (btn.innerText === charToRemove && btn.classList.contains('used')) { btn.classList.remove('used'); break; } }
             refreshLetterOutput();
         }
+
         function refreshLetterOutput() {
             const output = document.getElementById('letterOutput'); const item = activeData[builderStep]; const targetWord = item.name;
             if (buildLetters.length === 0) { output.innerHTML = `<span class="text-gray-300 italic text-sm">Tap letters...</span>`; return; }
@@ -603,6 +627,7 @@
             });
             output.innerHTML = html;
         }
+
         function checkWordComplete() {
             const item = activeData[builderStep]; const targetWord = item.name.replace(/\s/g, ''); 
             if (buildLetters.length === targetWord.length) {
